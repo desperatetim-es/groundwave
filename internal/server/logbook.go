@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/desperatetim-es/groundwave/internal/geo"
-	"github.com/desperatetim-es/groundwave/internal/logbook"
+	"github.com/kd9psm/groundwave/internal/geo"
+	"github.com/kd9psm/groundwave/internal/logbook"
 )
 
 const maxImportBytes = 64 << 20 // an ADIF file of about 200,000 contacts

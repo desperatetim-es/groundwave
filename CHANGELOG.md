@@ -26,5 +26,5 @@ First release.
 - **Releases:** a Windows executable, and Linux tarballs with SHA256 checksums.
 - **Data folder:** everything is stored in `Documents/Groundwave` (or `~/Groundwave`), chosen with `--data` or `GROUNDWAVE_HOME`.
 
-[Unreleased]: https://github.com/desperatetim-es/groundwave/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/desperatetim-es/groundwave/releases/tag/v1.0.0
+[Unreleased]: https://github.com/kd9psm/groundwave/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/kd9psm/groundwave/releases/tag/v1.0.0

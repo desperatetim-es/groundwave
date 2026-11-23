@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/desperatetim-es/groundwave/internal/callsign"
-	"github.com/desperatetim-es/groundwave/internal/geo"
-	"github.com/desperatetim-es/groundwave/internal/library"
+	"github.com/kd9psm/groundwave/internal/callsign"
+	"github.com/kd9psm/groundwave/internal/geo"
+	"github.com/kd9psm/groundwave/internal/library"
 )
 
 type fakeCallsigns struct {

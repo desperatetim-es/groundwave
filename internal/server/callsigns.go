@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/desperatetim-es/groundwave/internal/callsign"
-	"github.com/desperatetim-es/groundwave/internal/geo"
+	"github.com/kd9psm/groundwave/internal/callsign"
+	"github.com/kd9psm/groundwave/internal/geo"
 )
 
 // Callsigns is what the server needs from the callsign database.

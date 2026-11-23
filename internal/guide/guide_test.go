@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/desperatetim-es/groundwave/internal/library"
+	"github.com/kd9psm/groundwave/internal/library"
 )
 
 // pdfWith returns a tiny file the library accepts as a PDF.

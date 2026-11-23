@@ -1,4 +1,4 @@
-module github.com/desperatetim-es/groundwave
+module github.com/kd9psm/groundwave
 
 go 1.26.0
 

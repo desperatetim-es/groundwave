@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/desperatetim-es/groundwave/internal/geo"
+	"github.com/kd9psm/groundwave/internal/geo"
 )
 
 // GridSource says where a contact's grid square came from.

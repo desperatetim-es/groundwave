@@ -56,4 +56,4 @@ OPTIONS
 LICENSE
 -------
 groundwave is free software under the GNU GPL v3 (see LICENSE). Source code:
-https://github.com/desperatetim-es/groundwave
+https://github.com/kd9psm/groundwave
