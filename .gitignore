@@ -1,0 +1,18 @@
+# Build output
+/dist/
+/groundwave
+/groundwave.exe
+*.test
+*.out
+
+# Local data and secrets
+/data/
+*.env
+secrets*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.claude/settings.local.json

@@ -1,0 +1,22 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1" # weekly, Mondays: catches new advisories when nobody has touched the code
+
+permissions:
+  contents: read
+
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Known vulnerabilities in the standard library and dependencies we call
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
