@@ -62,7 +62,7 @@ jobs:
       # the SmartScreen warning until then). Sign dist/groundwave-windows-amd64.exe BEFORE the
       # checksum step above, then recompute its line in SHA256SUMS.
 
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*
 
