@@ -14,8 +14,8 @@ jobs:
   govulncheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"   # latest patch: the standard library is compiled into our binaries
       - name: Known vulnerabilities in the standard library and dependencies we call

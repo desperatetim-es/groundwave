@@ -12,8 +12,8 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"   # latest patch: the standard library is compiled into our binaries
       - name: gofmt
@@ -39,8 +39,8 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"   # latest patch: the standard library is compiled into our binaries
 
@@ -62,7 +62,7 @@ jobs:
       # the SmartScreen warning until then). Sign dist/groundwave-windows-amd64.exe BEFORE the
       # checksum step above, then recompute its line in SHA256SUMS.
 
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*
 
