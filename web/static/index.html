@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>groundwλve</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="bar">
+    <span class="brand">groundwλve</span>
+    <nav aria-label="Main">
+      <a href="#/library" data-route="library">Library</a>
+      <a href="#/antenna" data-route="antenna">Tools</a>
+      <a href="#/callsigns" data-route="callsigns">Callsigns</a>
+      <a href="#/logbook" data-route="logbook">Logbook</a>
+      <a href="#/clocks" data-route="clocks">Time &amp; Location</a>
+    </nav>
+    <!-- Always-visible clocks: GPS time above system time. The SYS badge appears when a fresh internet-time check exists. Opens the Time &amp; Location page. -->
+    <a class="clock" id="clock" href="#/clocks" title="GPS time (top) and this computer's clock (bottom). Click for details.">
+      <span class="crow"><span class="ctag">GPS</span><span class="ctime" id="clock-gps">--:--:--</span><span class="unit">UTC</span><span class="cnote" id="clock-gps-note"></span></span>
+      <span class="crow"><span class="ctag">SYS</span><span class="ctime" id="clock-sys">--:--:--</span><span class="unit">UTC</span><span class="cnote" id="clock-sys-note"></span></span>
+    </a>
+    <!-- Help menu: version and license pages. Small popdown, see js/menu.js. -->
+    <div class="menu" id="help-menu">
+      <button type="button" id="help-btn" class="quiet menu-btn" aria-haspopup="true" aria-expanded="false" aria-controls="help-pop" aria-label="Help and license information" title="Help and license information">?</button>
+      <div id="help-pop" class="menu-pop" role="menu" aria-label="Help and license information" hidden>
+        <div class="menu-title" id="about-line">groundwλve</div>
+        <a role="menuitem" href="#/legal/license">License (GPL v3)</a>
+        <a role="menuitem" href="#/legal/third-party">Third-party notices</a>
+      </div>
+    </div>
+    <button id="quit" type="button" class="quiet">Quit</button>
+    <!-- Window buttons: shown only inside the Windows app window, where this header is the title bar. -->
+    <div id="wincontrols" class="wincontrols" hidden>
+      <button type="button" id="win-min" aria-label="Minimize" title="Minimize">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 5.5h10"/></svg></button>
+      <button type="button" id="win-max" aria-label="Maximize" title="Maximize">
+        <svg class="ic-max" viewBox="0 0 10 10" aria-hidden="true"><rect x=".5" y=".5" width="9" height="9"/></svg>
+        <svg class="ic-restore" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 2.5v-2h7v7h-2M.5 2.5h7v7h-7z"/></svg></button>
+      <button type="button" id="win-close" class="close" aria-label="Close" title="Close">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0l10 10M10 0L0 10"/></svg></button>
+    </div>
+  </header>
+
+  <main id="view"></main>
+
+  <noscript><p class="hint">groundwλve needs JavaScript enabled in your browser.</p></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

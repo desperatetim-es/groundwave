@@ -1,0 +1,86 @@
+name: release
+
+# Runs only when a version tag is pushed (for example v1.1.0). Merging to main publishes nothing.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then echo "Run gofmt on:"; echo "$unformatted"; exit 1; fi
+      - run: go vet ./...
+      - run: go test ./...
+      - run: go run ./tools/licenses -check
+      - name: CHANGELOG has a section for this version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          grep -qF "## [$version]" CHANGELOG.md || { echo "CHANGELOG.md has no '## [$version]' section"; exit 1; }
+
+  publish:
+    needs: verify
+    runs-on: windows-latest
+    permissions:
+      contents: write      # create the GitHub Release
+      id-token: write      # build attestation
+      attestations: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build the Linux tarballs and SHA256SUMS
+        run: go run ./tools/release -version "${GITHUB_REF_NAME#v}"
+
+      - name: Build the Windows executable
+        shell: pwsh
+        run: ./build-windows.ps1 -Version ($env:GITHUB_REF_NAME -replace '^v','')
+
+      - name: Add the executable to SHA256SUMS
+        shell: pwsh
+        run: |
+          $exe = "dist/groundwave-windows-amd64.exe"
+          $hash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
+          Add-Content -Path dist/SHA256SUMS -Value "$hash  groundwave-windows-amd64.exe" -Encoding ascii
+
+      # Code signing goes here once a signing service is approved (see the release notes for
+      # the SmartScreen warning until then). Sign dist/groundwave-windows-amd64.exe BEFORE the
+      # checksum step above, then recompute its line in SHA256SUMS.
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
+
+      - name: Extract this version's release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            index($0, "## [" v "]") == 1 { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          [ -s notes.md ] || { echo "empty release notes"; exit 1; }
+          cat notes.md
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=""
+          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease";; esac
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "groundwλve ${GITHUB_REF_NAME#v}" --notes-file notes.md $flags
