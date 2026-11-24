@@ -20,6 +20,18 @@ var stateNames = map[string]string{
 	"district of columbia": "DC", "washington dc": "DC", "washington d c": "DC",
 	"puerto rico": "PR", "guam": "GU", "virgin islands": "VI", "us virgin islands": "VI", "u s virgin islands": "VI",
 	"american samoa": "AS", "northern mariana islands": "MP",
+
+	// Canadian provinces and territories (ISED's records use these two-letter codes).
+	"alberta": "AB", "british columbia": "BC", "manitoba": "MB", "new brunswick": "NB",
+	"newfoundland and labrador": "NL", "newfoundland": "NL", "nova scotia": "NS", "ontario": "ON",
+	"prince edward island": "PE", "quebec": "QC", "québec": "QC", "saskatchewan": "SK", "yukon": "YT",
+	"northwest territories": "NT", "nunavut": "NU",
+}
+
+// provinceCodes are the Canadian province and territory codes.
+var provinceCodes = map[string]bool{
+	"AB": true, "BC": true, "MB": true, "NB": true, "NL": true, "NS": true, "NT": true,
+	"NU": true, "ON": true, "PE": true, "QC": true, "SK": true, "YT": true,
 }
 
 // stateCodes are the two-letter codes the FCC uses, including the military
@@ -34,9 +46,9 @@ var stateCodes = map[string]bool{
 	"AS": true, "MP": true, "AA": true, "AE": true, "AP": true,
 }
 
-// StateCode turns a two-letter code or a full name ("IL", "il", "Illinois",
-// "north carolina", "D.C.") into the two-letter code. ok is false if it is
-// neither.
+// StateCode turns a two-letter code or a full name of a US state or territory or a
+// Canadian province ("IL", "il", "Illinois", "north carolina", "D.C.", "ON", "Ontario")
+// into the two-letter code. ok is false if it is none of them.
 func StateCode(s string) (code string, ok bool) {
 	t := strings.ToLower(strings.TrimSpace(s))
 	t = strings.NewReplacer(".", "", ",", "").Replace(t)
@@ -48,7 +60,7 @@ func StateCode(s string) (code string, ok bool) {
 		return c, true
 	}
 	if len(t) == 2 {
-		if c := strings.ToUpper(t); stateCodes[c] {
+		if c := strings.ToUpper(t); stateCodes[c] || provinceCodes[c] {
 			return c, true
 		}
 	}

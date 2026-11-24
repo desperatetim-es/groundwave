@@ -25,7 +25,7 @@ docs/                  Design notes
 ```
 Front end modules (`web/static/js/`): `app.js` (hash router, header clock, Quit), `home.js` (tiles), `library.js`, `antenna.js`, `dom.js` (safe DOM helper and `api()`). Each view exports `mount(root, args)` and may return a cleanup function. Routes: `#/`, `#/library`, `#/antenna/<calculator>`.
 
-`internal/gps/` is the GPS clock, `internal/ntp/` the internet-time checker, `internal/callsign/` the callsign database and `internal/logbook/` the contact log. Their design is documented with each feature (see below).
+`internal/gps/` is the GPS clock, `internal/ntp/` the internet-time checker, `internal/callsign/` the callsign databases (one per country) and `internal/logbook/` the contact log. Their design is documented with each feature (see below).
 
 ## Principles
 

@@ -85,3 +85,41 @@ func TestRealFCCFile(t *testing.T) {
 		t.Logf("search %-14q -> %d results in %v; first: %s", q, len(res), time.Since(t0).Round(time.Microsecond), first)
 	}
 }
+
+// TestRealISEDFile builds a database from the real ISED download and reports what came out. It is
+// skipped unless GROUNDWAVE_ISED_ZIP points at amateur_delim.zip. Run:
+// GROUNDWAVE_ISED_ZIP=path/to/amateur_delim.zip go test -run RealISED -v ./internal/callsign
+func TestRealISEDFile(t *testing.T) {
+	zipPath := os.Getenv("GROUNDWAVE_ISED_ZIP")
+	if zipPath == "" {
+		t.Skip("set GROUNDWAVE_ISED_ZIP to the real amateur_delim.zip to run this")
+	}
+	// how many lines the data file has, to compare with the records kept
+	lines := 0
+	zr, err := zip.OpenReader(zipPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range zr.File {
+		if strings.HasSuffix(f.Name, "amateur_delim.txt") {
+			rc, _ := f.Open()
+			sc := bufio.NewScanner(rc)
+			sc.Buffer(make([]byte, 0, 1<<20), 8<<20)
+			for sc.Scan() {
+				lines++
+			}
+			rc.Close()
+		}
+	}
+	zr.Close()
+
+	dbp := filepath.Join(t.TempDir(), "callsigns-ca.db")
+	st, err := ImportCanada(context.Background(), ImportOptions{ZipPath: zipPath, DBPath: dbp, Now: time.Now})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("file lines (including the header): %d; records kept: %d; with location: %d; clubs: %d", lines, st.Records, st.WithLocation, st.Clubs)
+	if lines-1-st.Records > 0 {
+		t.Logf("%d data lines were not kept", lines-1-st.Records)
+	}
+}

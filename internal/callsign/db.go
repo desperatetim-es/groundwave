@@ -58,7 +58,8 @@ INSERT INTO license_fts(license_fts) VALUES('rebuild');
 
 // DB is a read-only handle on a built database.
 type DB struct {
-	db *sql.DB
+	db      *sql.DB
+	country string // the source's ID ("us" for databases built before there were other countries)
 }
 
 // Open opens an existing database for searching.
@@ -79,6 +80,10 @@ func Open(path string) (*DB, error) {
 	if err != nil {
 		db.Close()
 		return nil, fmt.Errorf("the callsign database cannot be read (%w); download it again", err)
+	}
+	d.country = m["country"]
+	if d.country == "" {
+		d.country = IDUS
 	}
 	if v, _ := strconv.Atoi(m["schema_version"]); v != SchemaVersion {
 		db.Close()
@@ -110,9 +115,10 @@ func (d *DB) Meta() (map[string]string, error) {
 
 // Info summarises a database for the UI.
 type Info struct {
+	Country        string    `json:"country"`
 	Records        int       `json:"records"`
 	BuiltAt        time.Time `json:"built_at"`
-	SourceModified string    `json:"source_modified,omitempty"` // when the FCC published the file
+	SourceModified string    `json:"source_modified,omitempty"` // when the issuing authority published the file
 }
 
 // Info returns the database's size and age.
@@ -122,6 +128,7 @@ func (d *DB) Info() (Info, error) {
 		return Info{}, err
 	}
 	var in Info
+	in.Country = d.country
 	in.Records, _ = strconv.Atoi(m["records"])
 	in.BuiltAt, _ = time.Parse(time.RFC3339, m["built_at"])
 	in.SourceModified = m["source_modified"]

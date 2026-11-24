@@ -22,8 +22,6 @@ import (
 // within fcc.gov.
 const FCCURL = "https://data.fcc.gov/download/pub/uls/complete/l_amat.zip"
 
-const maxDownload = 2 << 30 // refuse anything over 2 GB
-
 var (
 	ErrBusy     = errors.New("a database update is already running")
 	ErrUpdating = errors.New("the callsign database is being replaced; try again in a moment")
@@ -50,13 +48,17 @@ type Status struct {
 	AgeDays        *int        `json:"age_days,omitempty"`
 	SourceModified string      `json:"source_modified,omitempty"` // when the FCC published the file the database was built from
 	Update         UpdateState `json:"update"`
+
+	// Sources is set only by a Directory: the state of each country's database.
+	Sources []SourceStatus `json:"sources,omitempty"`
 }
 
 // StoreOptions configures a Store. Only Dir is required.
 type StoreOptions struct {
-	Dir string // holds callsigns.db and the temporary download
-	URL string // default FCCURL; tests point it at a local server
-	// AnyHostForTests lifts the https and fcc.gov restrictions on the download. Tests only.
+	Dir    string  // holds the database and the temporary download
+	Source *Source // default US
+	URL    string  // default Source.URL; tests point it at a local server
+	// AnyHostForTests lifts the https and issuing-authority host restrictions on the download. Tests only.
 	AnyHostForTests bool
 	Now             func() time.Time
 }
@@ -76,8 +78,11 @@ type Store struct {
 
 // NewStore builds a Store and opens the existing database, if there is one.
 func NewStore(o StoreOptions) (*Store, error) {
+	if o.Source == nil {
+		o.Source = US
+	}
 	if o.URL == "" {
-		o.URL = FCCURL
+		o.URL = o.Source.URL
 	}
 	if o.Now == nil {
 		o.Now = time.Now
@@ -85,9 +90,9 @@ func NewStore(o StoreOptions) (*Store, error) {
 	if err := os.MkdirAll(o.Dir, 0o755); err != nil {
 		return nil, err
 	}
-	s := &Store{o: o, dbPath: filepath.Join(o.Dir, "callsigns.db")}
+	s := &Store{o: o, dbPath: filepath.Join(o.Dir, o.Source.DBFile)}
 	// Leftovers of an update that was interrupted by quitting the program.
-	for _, junk := range []string{s.dbPath + ".building", filepath.Join(o.Dir, "l_amat.zip.part"), filepath.Join(o.Dir, "l_amat.zip")} {
+	for _, junk := range []string{s.dbPath + ".building", filepath.Join(o.Dir, o.Source.ZipName+".part"), filepath.Join(o.Dir, o.Source.ZipName)} {
 		os.Remove(junk)
 	}
 	if db, err := Open(s.dbPath); err == nil {
@@ -198,13 +203,13 @@ func (s *Store) setPhase(phase string, frac float64) {
 
 func (s *Store) runUpdate(ctx context.Context, done chan struct{}) {
 	defer close(done)
-	zipPath := filepath.Join(s.o.Dir, "l_amat.zip")
+	zipPath := filepath.Join(s.o.Dir, s.o.Source.ZipName)
 	defer os.Remove(zipPath)
 
 	modified, err := s.download(ctx, zipPath)
 	if err == nil {
 		s.setPhase("Reading licenses", 0)
-		_, err = Import(ctx, ImportOptions{
+		_, err = s.o.Source.Import(ctx, ImportOptions{
 			ZipPath: zipPath, DBPath: s.dbPath, SourceModified: modified, Now: s.o.Now,
 			Progress: func(p Progress) { s.setPhase(p.Phase, p.Fraction) },
 			BeforeReplace: func() error { // free the old file so Windows can replace it
@@ -237,30 +242,31 @@ func (s *Store) runUpdate(ctx context.Context, done chan struct{}) {
 	case errors.Is(err, context.Canceled):
 		s.upd.Phase, s.upd.Cancelled, s.upd.Error = "Cancelled", true, ""
 	default:
-		s.upd.Phase, s.upd.Error, s.upd.Cancelled = "Failed", friendlyUpdateError(err), false
+		s.upd.Phase, s.upd.Error, s.upd.Cancelled = "Failed", friendlyUpdateError(err, s.o.Source), false
 	}
 }
 
-func friendlyUpdateError(err error) string {
+func friendlyUpdateError(err error, src *Source) string {
 	msg := err.Error()
 	switch {
 	case strings.Contains(msg, "no space left") || strings.Contains(msg, "not enough space") || strings.Contains(msg, "There is not enough space"):
-		return "There is not enough free disk space. The update needs roughly 500 MB while it runs."
+		return "There is not enough free disk space. The update needs " + src.Disk + " while it runs."
 	case strings.Contains(msg, "no such host") || strings.Contains(msg, "dial tcp") || strings.Contains(msg, "connection refused"):
-		return "Could not reach the FCC's server. You may be offline."
+		return "Could not reach " + src.Org + "'s server. You may be offline."
 	}
 	return msg
 }
 
-// download fetches the FCC file into dest and returns when it was published.
+// download fetches the source's file into dest and returns when it was published.
 func (s *Store) download(ctx context.Context, dest string) (modified string, err error) {
 	s.setPhase("Downloading", 0)
 	u, err := url.Parse(s.o.URL)
 	if err != nil {
 		return "", err
 	}
-	if !s.o.AnyHostForTests && (u.Scheme != "https" || !fccHost(u.Hostname())) {
-		return "", errors.New("the download address is not an FCC https address")
+	src := s.o.Source
+	if !s.o.AnyHostForTests && (u.Scheme != "https" || !src.Host(u.Hostname())) {
+		return "", fmt.Errorf("the download address is not an %s https address", src.Org)
 	}
 	client := &http.Client{
 		Timeout: 0, // large file: the context controls cancellation
@@ -268,8 +274,8 @@ func (s *Store) download(ctx context.Context, dest string) (modified string, err
 			if len(via) >= 5 {
 				return errors.New("too many redirects")
 			}
-			if !s.o.AnyHostForTests && (req.URL.Scheme != "https" || !fccHost(req.URL.Hostname())) {
-				return errors.New("the FCC's server redirected somewhere that is not an FCC address")
+			if !s.o.AnyHostForTests && (req.URL.Scheme != "https" || !src.Host(req.URL.Hostname())) {
+				return fmt.Errorf("%s's server redirected somewhere that is not an %s address", src.Org, src.Org)
 			}
 			return nil
 		},
@@ -285,10 +291,10 @@ func (s *Store) download(ctx context.Context, dest string) (modified string, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("the FCC's server answered %s", resp.Status)
+		return "", fmt.Errorf("%s's server answered %s", src.Org, resp.Status)
 	}
 	total := resp.ContentLength
-	if total > maxDownload {
+	if total > src.MaxBytes {
 		return "", errors.New("the download is larger than expected, so it was refused")
 	}
 	part := dest + ".part"
@@ -313,7 +319,7 @@ func (s *Store) download(ctx context.Context, dest string) (modified string, err
 				return "", werr
 			}
 			done += int64(n)
-			if done > maxDownload {
+			if done > src.MaxBytes {
 				return "", errors.New("the download is larger than expected, so it was refused")
 			}
 			if time.Since(last) > 200*time.Millisecond {

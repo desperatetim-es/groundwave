@@ -133,15 +133,15 @@ Lengths are shown in feet and inches and in metres. Each tab lists the rule it u
 
 ![Searching the callsign database](img/callsigns.png)
 
-Look up any US amateur licence with no internet connection: the name, licence class, standing, home town, an approximate grid square, and how far away and in which direction they are from you.
+Look up amateur licences from the United States and Canada with no internet connection: the name, licence class, standing, home town, an approximate grid square, and how far away and in which direction they are from you. You choose which countries to download.
 
 ### Getting the Database (One Time, Needs Internet)
 
-The first time, the page says there is no database yet. Press **Download Database**. groundwλve downloads the FCC's public amateur licence file (about 200 MB) and builds its own searchable copy. It takes a few minutes and needs roughly 500 MB of free disk space while it works. A progress bar shows how it is going, and **Cancel** stops it, leaving whatever you had before untouched.
+At the bottom of the page, **Databases** has one block for each country: **United States** (from the FCC) and **Canada** (from ISED, the Canadian government department that licenses amateurs). Press **Download Database** in the block for each country you want to search. groundwλve downloads that country's public amateur licence list and builds its own searchable copy. The US file is about 200 MB, takes a few minutes and needs roughly 500 MB of free disk space while it works. Canada's is about 3 MB and takes a few seconds. A progress bar shows how it is going, and **Cancel** stops it, leaving whatever you had before untouched.
 
-After that you never need the internet to search. The FCC refreshes its file weekly, so press **Update Database** now and then if you want newer licences. The page tells you how old your copy is.
+After that you never need the internet to search. Each block says how old its copy is; press **Update Database** now and then if you want newer licences. The FCC refreshes its file weekly.
 
-Only the call sign, name, class, status, dates and city, state and ZIP code are kept. Street addresses, phone numbers and email addresses are never saved.
+Only the call sign, name, class (or, for Canada, qualifications), status, dates and city, state or province and ZIP or postal area are kept. For Canada, only the first three characters of the postal code are kept. Street addresses, phone numbers and email addresses are never saved. Each block names the authority the list came from.
 
 ### Searching
 
@@ -151,19 +151,25 @@ Type in the big box. Results appear as you type.
 |---|---|
 | `kd9` or `w1aw` | Call signs that start that way (portable endings like `/P` work too) |
 | `smith` | People with that name |
+| `ve3` or `va7xyz` | Canadian call signs |
 | `60013` | Everyone in that ZIP code |
 | `cary, il` or `Cary, Illinois` | Everyone in that city and state |
-| `call:W9`, `st:IL`, `name:smith`, `city:cary` | Only that kind of match |
+| `ottawa, on` or `Ottawa, Ontario` | Everyone in that city and province |
+| `call:W9`, `st:IL`, `zip:60013`, `postal:K1A`, `name:smith`, `city:cary` | Only that kind of match (`postal:` takes a Canadian postal code; only its first three characters count) |
+
+If you have downloaded both countries, results come from both, and each one is marked with its country (**US** or **CA**).
 
 ### How Far Away Are They?
 
 Type **your grid square** in the box below the search (for example `EN52vf`), or press **Use GPS** to fill it from your receiver. The **From you** column then shows distance and compass direction.
 
-Locations are **approximate**. The FCC file has no street coordinates, so each licence is placed at the centre of its ZIP code. That is fine for "about how far", not for exact positions. A grid square in this table can differ from the operator's real one by a neighbouring square.
+Locations are **approximate**. The lists have no street coordinates, so each licence is placed at the centre of its ZIP code (United States) or of its postal-code area (Canada: the first three characters of the postal code, a district of a town or a rural area). That is fine for "about how far", not for exact positions. A licence with no address in the list has no location and no distance. A grid square in this table can differ from the operator's real one by a neighbouring square.
 
 ### Licence Standing
 
 Licences that ran out within the last two years (the renewal grace period) are listed but greyed, and marked with the date their term ended. When a call sign has been reissued, the current holder is listed first.
+
+Canada's list has no expiry dates, so every Canadian entry shows **Listed**: it is in ISED's list as of the day you downloaded it. A Canadian club is shown under the club's own name and place.
 
 ## Time & Location
 

@@ -26,6 +26,8 @@ type fakeCallsigns struct {
 	lastQ    string
 	lastCall string
 	lastLim  int
+
+	lastSource string
 }
 
 func (f *fakeCallsigns) Search(q string, limit int) ([]callsign.Record, error) {
@@ -37,8 +39,12 @@ func (f *fakeCallsigns) Lookup(call string) ([]callsign.Record, error) {
 	return f.records, f.err
 }
 func (f *fakeCallsigns) Status() callsign.Status { return f.status }
-func (f *fakeCallsigns) StartUpdate() error      { f.started++; return f.startErr }
-func (f *fakeCallsigns) CancelUpdate()           { f.cancels++ }
+func (f *fakeCallsigns) StartUpdate(source string) error {
+	f.started++
+	f.lastSource = source
+	return f.startErr
+}
+func (f *fakeCallsigns) CancelUpdate(source string) { f.cancels++; f.lastSource = source }
 
 func f64(v float64) *float64 { return &v }
 

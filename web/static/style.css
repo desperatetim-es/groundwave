@@ -185,3 +185,7 @@ details summary { cursor: pointer; margin: .6rem 0 .3rem; color: var(--muted); }
 .fold[open] > summary { margin-bottom: .75rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .panel h3 { margin: 0 0 .75rem; font-size: 1.05rem; }
+.dbblock + .dbblock { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.dbblock h3 { margin-bottom: .4rem; }
+.dbblock:first-child { margin-top: 1rem; }
+td .tag { margin-left: .4rem; }
