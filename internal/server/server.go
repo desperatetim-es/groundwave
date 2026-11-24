@@ -16,9 +16,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/desperatetim-es/groundwave/internal/library"
-	"github.com/desperatetim-es/groundwave/internal/logbook"
-	"github.com/desperatetim-es/groundwave/web"
+	"github.com/kd9psm/groundwave/internal/library"
+	"github.com/kd9psm/groundwave/internal/logbook"
+	"github.com/kd9psm/groundwave/web"
 )
 
 // Config wires the server to its collaborators.

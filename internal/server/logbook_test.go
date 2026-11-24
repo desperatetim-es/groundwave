@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/desperatetim-es/groundwave/internal/callsign"
-	"github.com/desperatetim-es/groundwave/internal/library"
-	"github.com/desperatetim-es/groundwave/internal/logbook"
+	"github.com/kd9psm/groundwave/internal/callsign"
+	"github.com/kd9psm/groundwave/internal/library"
+	"github.com/kd9psm/groundwave/internal/logbook"
 )
 
 const origin = "http://127.0.0.1:47321"

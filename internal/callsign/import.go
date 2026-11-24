@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/desperatetim-es/groundwave/internal/geo"
+	"github.com/kd9psm/groundwave/internal/geo"
 )
 
 // Progress reports how far a build has got.

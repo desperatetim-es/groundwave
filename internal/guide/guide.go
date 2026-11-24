@@ -18,7 +18,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/desperatetim-es/groundwave/internal/library"
+	"github.com/kd9psm/groundwave/internal/library"
 )
 
 //go:embed groundwave-user-guide.pdf

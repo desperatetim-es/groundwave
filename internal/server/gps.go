@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/desperatetim-es/groundwave/internal/gps"
+	"github.com/kd9psm/groundwave/internal/gps"
 )
 
 // GPS is what the server needs from the receiver manager.

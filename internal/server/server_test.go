@@ -14,9 +14,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/desperatetim-es/groundwave/internal/gps"
-	"github.com/desperatetim-es/groundwave/internal/library"
-	"github.com/desperatetim-es/groundwave/internal/ntp"
+	"github.com/kd9psm/groundwave/internal/gps"
+	"github.com/kd9psm/groundwave/internal/library"
+	"github.com/kd9psm/groundwave/internal/ntp"
 )
 
 var pdf = []byte("%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF\n")

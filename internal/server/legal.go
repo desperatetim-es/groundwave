@@ -6,7 +6,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/desperatetim-es/groundwave"
+	"github.com/kd9psm/groundwave"
 )
 
 // legalFiles maps the name in the URL to the embedded file. Only these two can

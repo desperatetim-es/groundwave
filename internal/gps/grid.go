@@ -3,7 +3,7 @@
 
 package gps
 
-import "github.com/desperatetim-es/groundwave/internal/geo"
+import "github.com/kd9psm/groundwave/internal/geo"
 
 // Grid returns the Maidenhead locator for a position; see geo.Grid.
 func Grid(lat, lon float64, pairs int) string { return geo.Grid(lat, lon, pairs) }

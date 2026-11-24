@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/desperatetim-es/groundwave/internal/callsign"
+	"github.com/kd9psm/groundwave/internal/callsign"
 )
 
 type person struct {

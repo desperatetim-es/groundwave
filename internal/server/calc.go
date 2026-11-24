@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/desperatetim-es/groundwave/internal/calc"
+	"github.com/kd9psm/groundwave/internal/calc"
 )
 
 // calc serves the read-only calculators: GET /api/calc/{name}?param=value.
