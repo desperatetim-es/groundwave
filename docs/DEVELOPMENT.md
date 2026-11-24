@@ -14,7 +14,18 @@ Options: `--data <folder>` (library location), `--port`, `--browser` (use a brow
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the layout and security rules.
 
-## Building releases
+## Releasing
+
+Releases are built by GitHub Actions, not by hand. Merge to `main` first; nothing is published until a tag is pushed.
+
+1. In a PR, move the finished entries in `CHANGELOG.md` from Unreleased into a new `## [x.y.z] - date` section, and merge it.
+2. Tag the merged commit: `git tag -a vX.Y.Z -m "groundwλve X.Y.Z"`, then `git push origin vX.Y.Z`.
+3. The `release` workflow checks the tag against the changelog, runs the tests, builds the Windows executable and the Linux tarballs, writes `SHA256SUMS`, attests the build and publishes the GitHub Release (tags containing `-` are marked pre-release).
+4. Check the Release page and verify a download with `sha256sum -c`.
+
+`v*` tags cannot be moved or deleted once pushed (repository ruleset).
+
+## Building releases locally
 
 Both builds are produced on any computer that has Go; the output goes in `dist/` (not tracked).
 

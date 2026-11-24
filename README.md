@@ -17,12 +17,12 @@ It is one self-contained program for Windows and Linux. No account, no telemetry
 
 ## Download and install
 
-> Version 1.0.0 is complete but not yet published as a release. Until then, [build it from source](#build-from-source).
-
-When a release is published, download the file for your system from the Releases page:
+Download the file for your system from the [Releases page](https://github.com/kd9psm/groundwave/releases):
 
 - **Windows:** `groundwave-windows-amd64.exe`. Double-click to run. The app opens in its own window (it needs the WebView2 runtime, which is already on Windows 11 and current Windows 10). Because the file is unsigned, Windows may show "Windows protected your PC": choose **More info**, then **Run anyway**.
 - **Linux:** the `.tar.gz` that matches `uname -m` (`x86_64` for PCs, `aarch64` or `armv7l` for Raspberry Pi). Unpack it and run `./groundwave/groundwave` from a terminal. It opens in your default browser; stop it with the **Quit** button or Ctrl+C. To use a USB GPS receiver you need to be in the `dialout` (or `uucp`) group.
+
+Each release lists SHA256 checksums in `SHA256SUMS`. To check a download, put it in the same folder as that file and run `sha256sum -c --ignore-missing SHA256SUMS` (Linux) or `Get-FileHash <file>` (Windows PowerShell) and compare. Builds are made by GitHub Actions from the tagged source, and the Windows file carries a build attestation (`gh attestation verify <file> --owner kd9psm`).
 
 Your documents, logbook and settings live in a data folder you can copy to back up. Start with the [user guide](docs/user-guide/user-guide.md).
 
