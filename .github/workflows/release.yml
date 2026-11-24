@@ -56,7 +56,9 @@ jobs:
         run: |
           $exe = "dist/groundwave-windows-amd64.exe"
           $hash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
-          Add-Content -Path dist/SHA256SUMS -Value "$hash  groundwave-windows-amd64.exe" -Encoding ascii
+          # AppendAllText with an explicit "`n": Add-Content would end the line with CRLF on Windows,
+          # and `sha256sum -c` then fails to find the file.
+          [System.IO.File]::AppendAllText("dist/SHA256SUMS", "$hash  groundwave-windows-amd64.exe`n")
 
       # Code signing goes here once a signing service is approved (see the release notes for
       # the SmartScreen warning until then). Sign dist/groundwave-windows-amd64.exe BEFORE the
