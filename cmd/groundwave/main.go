@@ -28,6 +28,7 @@ import (
 	"github.com/kd9psm/groundwave/internal/logbook"
 	"github.com/kd9psm/groundwave/internal/ntp"
 	"github.com/kd9psm/groundwave/internal/server"
+	"github.com/kd9psm/groundwave/internal/updatecheck"
 	"github.com/kd9psm/groundwave/internal/window"
 )
 
@@ -121,6 +122,8 @@ func main() {
 		Time:      timeCheck,
 		Callsigns: callsigns,
 		Logbook:   qsoLog,
+		Updates:   updatecheck.New(updatecheck.Options{Version: version}),
+		OpenURL:   browser.Open,
 		Fetcher:   &library.Fetcher{},
 		Addr:      ln.Addr().String(),
 		Version:   version,

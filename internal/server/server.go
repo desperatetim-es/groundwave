@@ -24,10 +24,12 @@ import (
 // Config wires the server to its collaborators.
 type Config struct {
 	Store     *library.Store
-	GPS       GPS            // receiver manager; nil = no GPS support
-	Time      Time           // internet-time checker; nil = none
-	Callsigns Callsigns      // offline callsign database; nil = none
-	Logbook   *logbook.Store // contact log; nil = none
+	GPS       GPS                // receiver manager; nil = no GPS support
+	Time      Time               // internet-time checker; nil = none
+	Callsigns Callsigns          // offline callsign database; nil = none
+	Logbook   *logbook.Store     // contact log; nil = none
+	Updates   UpdateChecker      // "Check for updates" in the Help menu; nil = unavailable
+	OpenURL   func(string) error // opens a fixed link in the system browser (Help menu); nil = unavailable
 	Fetcher   *library.Fetcher
 	Addr      string // the listener address, e.g. 127.0.0.1:47321
 	Version   string
@@ -55,6 +57,9 @@ func New(c Config) (http.Handler, error) {
 	if c.Callsigns == nil {
 		c.Callsigns = noCallsigns{}
 	}
+	if c.Updates == nil {
+		c.Updates = noUpdates{}
+	}
 	_, port, err := net.SplitHostPort(c.Addr)
 	if err != nil {
 		return nil, err
@@ -73,6 +78,8 @@ func New(c Config) (http.Handler, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/ping", s.ping)
 	mux.HandleFunc("GET /api/legal/{name}", s.legal)
+	mux.HandleFunc("POST /api/update-check", s.updateCheck)
+	mux.HandleFunc("POST /api/open/{name}", s.openExternal)
 	mux.HandleFunc("GET /api/docs", s.list)
 	mux.HandleFunc("POST /api/docs", s.upload)
 	mux.HandleFunc("POST /api/docs/url", s.addURL)

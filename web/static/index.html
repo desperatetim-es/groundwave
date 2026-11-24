@@ -21,13 +21,17 @@
       <span class="crow"><span class="ctag">GPS</span><span class="ctime" id="clock-gps">--:--:--</span><span class="unit">UTC</span><span class="cnote" id="clock-gps-note"></span></span>
       <span class="crow"><span class="ctag">SYS</span><span class="ctime" id="clock-sys">--:--:--</span><span class="unit">UTC</span><span class="cnote" id="clock-sys-note"></span></span>
     </a>
-    <!-- Help menu: version and license pages. Small popdown, see js/menu.js. -->
+    <!-- Help menu: version, license pages, project link and an update check. Small popdown, see js/menu.js. -->
     <div class="menu" id="help-menu">
       <button type="button" id="help-btn" class="quiet menu-btn" aria-haspopup="true" aria-expanded="false" aria-controls="help-pop" aria-label="Help and license information" title="Help and license information">?</button>
       <div id="help-pop" class="menu-pop" role="menu" aria-label="Help and license information" hidden>
         <div class="menu-title" id="about-line">groundwλve</div>
         <a role="menuitem" href="#/legal/license">License (GPL v3)</a>
         <a role="menuitem" href="#/legal/third-party">Third-party notices</a>
+        <div class="menu-sep" role="separator"></div>
+        <a role="menuitem" href="https://github.com/kd9psm/groundwave" target="_blank" rel="noopener noreferrer" data-external="repo">GitHub repository</a>
+        <button type="button" role="menuitem" id="update-check" class="menu-item" title="Contacts github.com, only when you press this">Check for updates</button>
+        <div id="update-result" class="menu-note" role="status" aria-live="polite" hidden></div>
       </div>
     </div>
     <button id="quit" type="button" class="quiet">Quit</button>

@@ -118,6 +118,16 @@ a.tile:hover, a.tile:focus-visible { border-color: var(--accent); outline: none;
 .menu-pop a { display: block; padding: .45rem .6rem; border-radius: .4rem; color: var(--text); text-decoration: none; }
 .menu-pop a:hover, .menu-pop a:focus-visible { background: var(--bg); color: var(--accent); outline: none; }
 .menu-pop a:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.menu-sep { height: 1px; margin: .3rem .2rem; background: var(--line); }
+.menu-pop .menu-item { display: block; width: 100%; text-align: left; padding: .45rem .6rem; border: 0; border-radius: .4rem;
+                       background: transparent; color: var(--text); cursor: pointer; }
+.menu-pop .menu-item:hover, .menu-pop .menu-item:focus-visible { background: var(--bg); color: var(--accent); outline: none; }
+.menu-pop .menu-item:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.menu-pop .menu-item[aria-busy="true"] { opacity: .6; cursor: progress; }
+.menu-note { padding: .35rem .6rem .45rem; max-width: 17rem; font-size: .8rem; color: var(--muted); }
+.menu-note.err { color: var(--danger); }
+.menu-note.ok { color: var(--ok); }
+.menu-note a { padding: .25rem 0 0; font-size: .85rem; }
 
 /* ---- license pages ---- */
 .legal-text { margin: 1rem 0 0; padding: .75rem 1rem; background: var(--bg); border: 1px solid var(--line); border-radius: .6rem;
