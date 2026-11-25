@@ -44,9 +44,10 @@ func (e *Error) Error() string { return e.Msg }
 type Result struct {
 	Current   string    `json:"current"`
 	Latest    string    `json:"latest"`
-	Newer     bool      `json:"newer"`         // a newer release than the running version exists
-	Dev       bool      `json:"dev,omitempty"` // the running version is not a release number (a development build)
-	URL       string    `json:"url"`           // where to read about and download the release
+	Newer     bool      `json:"newer"`           // a newer release than the running version exists
+	Ahead     bool      `json:"ahead,omitempty"` // the running version is newer than the latest release (a preview or unreleased build)
+	Dev       bool      `json:"dev,omitempty"`   // the running version is not a release number (a development build)
+	URL       string    `json:"url"`             // where to read about and download the release
 	CheckedAt time.Time `json:"checked_at"`
 }
 
@@ -187,6 +188,7 @@ func (c *Checker) Check(ctx context.Context) (Result, error) {
 	}
 	if running, pre, ok := parse(c.o.Version); ok {
 		res.Newer = newer(running, latest, pre)
+		res.Ahead = !res.Newer && running != latest
 	} else {
 		res.Dev = true
 	}

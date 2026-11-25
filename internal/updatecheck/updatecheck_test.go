@@ -42,28 +42,28 @@ func check(t *testing.T, version string, status int, body string) (Result, error
 func TestNewerAndSameAndDev(t *testing.T) {
 	const rel = `{"tag_name":"v1.2.0","draft":false,"prerelease":false}`
 	for _, tc := range []struct {
-		version     string
-		newer, dev  bool
-		description string
+		version           string
+		newer, dev, ahead bool
+		description       string
 	}{
-		{"1.0.0", true, false, "older release"},
-		{"1.1.9", true, false, "older patch"},
-		{"1.2.0", false, false, "same"},
-		{"1.2.1", false, false, "running is newer"},
-		{"2.0.0", false, false, "running is a later major"},
-		{"1.2.0-preview", true, false, "preview of the same version is older than its release"},
-		{"1.3.0-preview", false, false, "preview of a later version"},
-		{"v1.0.0", true, false, "leading v"},
-		{"dev", false, true, "development build"},
-		{"", false, true, "empty version"},
+		{"1.0.0", true, false, false, "older release"},
+		{"1.1.9", true, false, false, "older patch"},
+		{"1.2.0", false, false, false, "same"},
+		{"1.2.1", false, false, true, "running is newer"},
+		{"2.0.0", false, false, true, "running is a later major"},
+		{"1.2.0-preview", true, false, false, "preview of the same version is older than its release"},
+		{"1.3.0-preview", false, false, true, "preview of a later version"},
+		{"v1.0.0", true, false, false, "leading v"},
+		{"dev", false, true, false, "development build"},
+		{"", false, true, false, "empty version"},
 	} {
 		res, err := check(t, tc.version, 200, rel)
 		if err != nil {
 			t.Errorf("%s (%q): %v", tc.description, tc.version, err)
 			continue
 		}
-		if res.Newer != tc.newer || res.Dev != tc.dev {
-			t.Errorf("%s (%q): newer=%v dev=%v, want newer=%v dev=%v", tc.description, tc.version, res.Newer, res.Dev, tc.newer, tc.dev)
+		if res.Newer != tc.newer || res.Dev != tc.dev || res.Ahead != tc.ahead {
+			t.Errorf("%s (%q): newer=%v dev=%v ahead=%v, want newer=%v dev=%v ahead=%v", tc.description, tc.version, res.Newer, res.Dev, res.Ahead, tc.newer, tc.dev, tc.ahead)
 		}
 		if res.Latest != "1.2.0" || res.URL != ReleasesURL || res.Current != tc.version {
 			t.Errorf("%s: bad result %+v", tc.description, res)

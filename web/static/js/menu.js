@@ -87,6 +87,7 @@ export function initHelpMenu() {
       const link = typeof r.url === "string" && r.url.startsWith("https://github.com/") ? r.url : "";
       if (r.newer) showResult(`Version ${r.latest} is available. You have ${r.current}.`, "ok", link);
       else if (r.dev) showResult(`This is a development build. The newest release is ${r.latest}.`, "", link);
+      else if (r.ahead) showResult(`You have ${r.current}, which is newer than the latest release (${r.latest}).`, "ok");
       else showResult(`You have the newest version (${r.current}).`, "ok");
     } catch (e) {
       showResult(e.message || "The update check failed.", "err");
