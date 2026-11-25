@@ -110,6 +110,20 @@ a.tile:hover, a.tile:focus-visible { border-color: var(--accent); outline: none;
 .menu { position: relative; }
 .menu-btn { width: 2rem; height: 2rem; padding: 0; border-radius: 50%; font-weight: 700; line-height: 1; }
 .menu-btn[aria-expanded="true"], .menu-btn:hover { border-color: var(--accent); color: var(--accent); }
+.menu-btn.has-update { position: relative; }
+.menu-btn.has-update::after { content: ""; position: absolute; top: -.1rem; right: -.1rem; width: .6rem; height: .6rem; border-radius: 50%;
+                              background: var(--accent); border: 2px solid var(--panel); }
+.gear-btn { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%;
+            border: 1px solid var(--line); color: var(--text); text-decoration: none; }
+.gear-btn:hover, .gear-btn:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+.gear-btn[aria-current="page"] { border-color: var(--accent); color: var(--accent-text); background: var(--accent); }
+.bar nav a[hidden] { display: none; }
+.setting { display: block; margin: .6rem 0 0; }
+.setting .hint { margin: .15rem 0 0 1.6rem; }
+.setting input { margin-right: .5rem; }
+.setting-title { font-weight: 600; }
+.saved { color: var(--ok); font-size: .85rem; min-height: 1.2rem; margin: .5rem 0 0; }
+.saved.err { color: var(--danger); }
 .menu-pop { position: absolute; right: 0; top: calc(100% + .4rem); z-index: 3; min-width: 13rem; padding: .35rem;
             background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: .6rem;
             box-shadow: 0 6px 20px rgb(0 0 0 / .18); }

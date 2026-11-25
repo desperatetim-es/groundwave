@@ -15,6 +15,7 @@ import (
 // UpdateChecker asks whether a newer release exists (see package updatecheck).
 type UpdateChecker interface {
 	Check(ctx context.Context) (updatecheck.Result, error)
+	Last() (updatecheck.Result, bool) // the latest answer so far; never contacts anything
 }
 
 // noUpdates is used when the program is built without a checker (tests): it
@@ -23,6 +24,18 @@ type noUpdates struct{}
 
 func (noUpdates) Check(context.Context) (updatecheck.Result, error) {
 	return updatecheck.Result{}, &updatecheck.Error{Msg: "Checking for updates is not available."}
+}
+func (noUpdates) Last() (updatecheck.Result, bool) { return updatecheck.Result{}, false }
+
+// updateLast reports what the most recent check found (at startup, or by the button) without
+// contacting anything. The page asks on load so it can show that a newer release exists.
+func (s *srv) updateLast(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
+	res, ok := s.Updates.Last()
+	writeJSON(w, http.StatusOK, struct {
+		Checked bool `json:"checked"`
+		updatecheck.Result
+	}{ok, res})
 }
 
 // updateCheck answers the Help menu's "Check for updates" button. It is a POST so

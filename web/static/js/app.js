@@ -10,12 +10,14 @@ import * as clocks from "./clocks.js";
 import * as callsigns from "./callsigns.js";
 import * as logbook from "./logbook.js";
 import * as legal from "./legal.js";
+import * as settings from "./settings.js";
+import * as prefs from "./prefs.js";
 import { initHelpMenu } from "./menu.js";
 import { start as startGPS, gpsNow, shortNote, hms } from "./gpsstate.js";
 import { start as startNTP, ntpNow, current as ntpState } from "./ntpstate.js";
 
-const routes = { "": home, library, antenna, callsigns, logbook, clocks, gps: clocks, legal }; // #/gps is the old name for Clocks
-const titles = { library: "Library", antenna: "Tools", callsigns: "Callsigns", logbook: "Logbook", clocks: "Time & Location", gps: "Time & Location", legal: "License" };
+const routes = { "": home, library, antenna, callsigns, logbook, clocks, gps: clocks, legal, settings }; // #/gps is the old name for Clocks
+const titles = { library: "Library", antenna: "Tools", callsigns: "Callsigns", logbook: "Logbook", clocks: "Time & Location", gps: "Time & Location", legal: "License", settings: "Settings" };
 const view = document.getElementById("view");
 let cleanup = null;
 
@@ -29,10 +31,21 @@ function navigate() {
     if (a.dataset.route === (name === "gps" ? "clocks" : name)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
+  const gear = document.getElementById("settings-btn");
+  if (name === "settings") gear.setAttribute("aria-current", "page"); else gear.removeAttribute("aria-current");
   document.title = (titles[name] ? titles[name] + " - " : "") + "groundwλve";
 }
 window.addEventListener("hashchange", navigate);
 navigate();
+
+// Pages the user chose to hide (Settings) leave the top menu; the home page does the same for its tiles.
+// A hidden page is only unlisted: a link to it still works.
+function applyHidden() {
+  const hidden = new Set(prefs.hiddenPages());
+  for (const a of document.querySelectorAll("nav a[data-route]")) a.hidden = hidden.has(a.dataset.route);
+}
+prefs.subscribe(applyHidden);
+prefs.load();
 
 // ---- header clocks: GPS time above system time ---------------------------------
 const clockGps = document.getElementById("clock-gps");

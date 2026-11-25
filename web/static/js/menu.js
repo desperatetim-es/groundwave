@@ -17,6 +17,7 @@ export function initHelpMenu() {
   function open() {
     pop.hidden = false;
     btn.setAttribute("aria-expanded", "true");
+    if (known && known.newer && result.hidden) showNewer(known); // a check at startup found one: say so
   }
   function close(returnFocus) {
     if (!isOpen()) return;
@@ -70,6 +71,14 @@ export function initHelpMenu() {
 
   const check = document.getElementById("update-check");
   const result = document.getElementById("update-result");
+  let known = null; // the latest check's answer (made by the button, or at startup if the user asked for that)
+  function remember(r) {
+    known = r;
+    btn.classList.toggle("has-update", !!(r && r.newer));
+    btn.title = btn.getAttribute("aria-label") + (r && r.newer ? " (a newer version is available)" : "");
+  }
+  function releaseLink(r) { return typeof r.url === "string" && r.url.startsWith("https://github.com/") ? r.url : ""; }
+  function showNewer(r) { showResult(`Version ${r.latest} is available. You have ${r.current}.`, "ok", releaseLink(r)); }
   function showResult(text, kind, link) {
     result.replaceChildren();
     result.className = "menu-note" + (kind ? " " + kind : "");
@@ -84,8 +93,9 @@ export function initHelpMenu() {
     showResult("Checking github.com…");
     try {
       const r = await api("/api/update-check", { method: "POST" });
-      const link = typeof r.url === "string" && r.url.startsWith("https://github.com/") ? r.url : "";
-      if (r.newer) showResult(`Version ${r.latest} is available. You have ${r.current}.`, "ok", link);
+      const link = releaseLink(r);
+      remember(r);
+      if (r.newer) showNewer(r);
       else if (r.dev) showResult(`This is a development build. The newest release is ${r.latest}.`, "", link);
       else if (r.ahead) showResult(`You have ${r.current}, which is newer than the latest release (${r.latest}).`, "ok");
       else showResult(`You have the newest version (${r.current}).`, "ok");
@@ -95,6 +105,10 @@ export function initHelpMenu() {
       check.removeAttribute("aria-busy");
     }
   });
+
+  // If the user asked for a check at startup, it has already happened: show what it found (this reads the
+  // answer the program already has; it does not contact GitHub).
+  api("/api/update-check").then((r) => { if (r && r.checked) remember(r); }).catch(() => {});
 
   // Show which version this is (useful in bug reports).
   api("/api/ping").then((p) => {

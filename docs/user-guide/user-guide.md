@@ -10,13 +10,14 @@ It is one program. There is nothing to install and no account to make. Download 
 
 1. [Getting Started](#getting-started)
 2. [Finding Your Way Around](#finding-your-way-around)
-3. [Library](#library)
-4. [Tools](#tools)
-5. [Callsigns](#callsigns)
-6. [Time & Location](#time--location)
-7. [Logbook](#logbook)
-8. [Your Files and Your Privacy](#your-files-and-your-privacy)
-9. [When Something Goes Wrong](#when-something-goes-wrong)
+3. [Settings](#settings)
+4. [Library](#library)
+5. [Tools](#tools)
+6. [Callsigns](#callsigns)
+7. [Time & Location](#time--location)
+8. [Logbook](#logbook)
+9. [Your Files and Your Privacy](#your-files-and-your-privacy)
+10. [When Something Goes Wrong](#when-something-goes-wrong)
 
 ## Getting Started
 
@@ -73,7 +74,20 @@ The top bar is the same on every page. It has the page links, and on the right, 
 - **GPS** (top line) is the time from your GPS receiver, in UTC. If no receiver is connected it shows dashes and a short reason.
 - **SYS** (bottom line) is your computer's own clock, in UTC. The small note beside it ("in sync" or "3.5 s slow") appears once you have compared it with internet time (see [Time & Location](#time--location)).
 
-Click the clocks to open the Time & Location page. The **?** button next to them opens a small menu with the program's version and these items: **License (GPL v3)** and **Third-party notices**, which list the open-source software groundwλve is built from; **GitHub repository**, a link to the project's home page; and **Check for updates**. Pressing **Check for updates** asks GitHub (one anonymous request, only when you press it) which release is newest and tells you whether you already have it (or are running a newer test build). If a newer one exists, an **Open the release page** link takes you to the download. The program never downloads or installs an update by itself. **Quit** stops the program. In the Windows app the Quit button is replaced by the window's close button, and you can drag the window by the top bar.
+Click the clocks to open the Time & Location page. The **gear** opens [Settings](#settings). The **?** button next to them opens a small menu with the program's version and these items: **License (GPL v3)** and **Third-party notices**, which list the open-source software groundwλve is built from; **GitHub repository**, a link to the project's home page; and **Check for updates**. Pressing **Check for updates** asks GitHub (one anonymous request, only when you press it) which release is newest and tells you whether you already have it (or are running a newer test build). If a newer one exists, an **Open the release page** link takes you to the download. The program never downloads or installs an update by itself. **Quit** stops the program. In the Windows app the Quit button is replaced by the window's close button, and you can drag the window by the top bar.
+
+## Settings
+
+The **gear** button in the top bar, next to the **?**, opens **Settings**. Every change is saved the moment you make it. groundwλve never contacts the internet by itself unless you turn one of these on, and all of them are **off** by default.
+
+| Setting | What it does |
+|---|---|
+| **Check for updates when groundwλve starts** | A few seconds after the program starts it sends one anonymous request to GitHub. If a newer version exists, a small dot appears on the **?** button and the **?** menu says so. Nothing is downloaded or installed. |
+| **Show Library, Tools, Callsigns, Logbook, Time & Location** | Untick a page you do not use to take it out of the top menu and the home page. It is only hidden: a link to it still works, and nothing is deleted. |
+| **Check internet time automatically every 10 minutes** | The automatic internet-time check that used to be on the Time & Location page. The page still shows whether it is on and has a **Check Now** button. |
+| **Callsign databases at launch** | **Do nothing**, **Check whether a newer list is available** (a small request to each publisher that does not download the list; the Callsigns page then says if a newer one exists), or **Check, and update any list that is out of date** (downloads and rebuilds it for you; the US list is about 200 MB). It only concerns lists you have already downloaded. |
+
+The two launch settings take effect the next time groundwλve starts. Your choices are kept in `settings.json` in your data folder.
 
 ## Library
 
@@ -221,7 +235,7 @@ GPS time here is accurate to about a third of a second, which is fine for the di
 
 ### Internet Time (Optional)
 
-Open **Internet Time (NTP)** and press **Check Now** to compare your computer's clock with public internet time servers (Cloudflare, NIST and the NTP Pool). That is the most accurate reference when you are online, usually within a few hundredths of a second.
+Open **Internet Time (NTP)** and press **Check Now** to compare your computer's clock with public internet time servers (Cloudflare, NIST and the NTP Pool). That is the most accurate reference when you are online, usually within a few hundredths of a second. The card also shows whether automatic checks every 10 minutes are on; you change that in [Settings](#settings) (the gear icon).
 
 This is the one thing on the page that uses the internet, so it only happens when you press the button, or if you tick *Also check automatically every 10 minutes* (which is off until you choose it). The servers can see your computer's internet address, as with any website you visit.
 
@@ -270,7 +284,7 @@ There is no online sync in this version. Sending contacts to QRZ, LoTW, eQSL and
 ## Your Files and Your Privacy
 
 - groundwλve has **no tracking and no accounts**. It never sends information about you or your computer anywhere.
-- It uses the internet **only when you press a button that says so**: adding a document from a link, downloading or updating the callsign database, and checking internet time.
+- It uses the internet **only when you press a button that says so** (adding a document from a link, downloading or updating a callsign database, checking internet time, or **Check for updates**), **or when you have turned on one of the options in [Settings](#settings)**: a check for updates at startup, automatic internet-time checks, or checking or updating the callsign databases at launch. All of those are off until you turn them on.
 - The program only answers to your own computer. Other computers on your network, and websites in your browser, cannot open it.
 - Everything lives in your **Groundwave** folder (see [Where Your Information Is Kept](#where-your-information-is-kept)). Copy that folder to back it up or to move to another computer.
 
