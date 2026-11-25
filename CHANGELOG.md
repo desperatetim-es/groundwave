@@ -6,6 +6,10 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
+## [1.1.0-beta.1] - 2026-11-25
+
+**A pre-release for testing.** It is not offered by **Check for updates** (which only looks at full releases) and will not replace the full 1.1.0. Please report problems at https://github.com/kd9psm/groundwave/issues. Things worth trying: download the Canada callsign list and search it; open **Settings** (the gear) and switch the options on and off; press **Check for updates** in the **?** menu; and, if you use the Windows app, check that the GitHub link opens your browser. Your data folder is compatible with 1.0.0.
+
 ### Added
 
 - **Settings:** a gear button next to the **?** opens a Settings page (saved as you change it, kept in `settings.json`). All of its internet options are off by default: **check for updates when groundwλve starts** (a dot on the **?** button if a newer version exists; nothing is installed), **hide pages** you do not use from the top menu and home page (links to them still work), **check internet time automatically every 10 minutes** (moved here from the Time & Location page, which now shows the setting and where to change it), and **callsign databases at launch**: do nothing, check whether a publisher has a newer list, or update out-of-date lists automatically. Only databases you have already downloaded are ever checked or updated.
@@ -32,5 +36,6 @@ First release.
 - **Releases:** a Windows executable, and Linux tarballs with SHA256 checksums.
 - **Data folder:** everything is stored in `Documents/Groundwave` (or `~/Groundwave`), chosen with `--data` or `GROUNDWAVE_HOME`.
 
-[Unreleased]: https://github.com/kd9psm/groundwave/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/kd9psm/groundwave/compare/v1.1.0-beta.1...HEAD
+[1.1.0-beta.1]: https://github.com/kd9psm/groundwave/releases/tag/v1.1.0-beta.1
 [1.0.0]: https://github.com/kd9psm/groundwave/releases/tag/v1.0.0
