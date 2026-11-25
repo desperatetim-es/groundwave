@@ -6,6 +6,10 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
+### Added
+
+- **App:** the **?** menu now has a link to the project on GitHub and a **Check for updates** button. The button sends one anonymous request to GitHub, only when you press it, and says whether a newer release exists, with a link to its page. Nothing is downloaded or installed automatically. In the Windows app the GitHub link opens in your browser.
+
 ## [1.0.0] - 2026-11-23
 
 First release.

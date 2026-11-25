@@ -73,7 +73,7 @@ The top bar is the same on every page. It has the page links, and on the right, 
 - **GPS** (top line) is the time from your GPS receiver, in UTC. If no receiver is connected it shows dashes and a short reason.
 - **SYS** (bottom line) is your computer's own clock, in UTC. The small note beside it ("in sync" or "3.5 s slow") appears once you have compared it with internet time (see [Time & Location](#time--location)).
 
-Click the clocks to open the Time & Location page. The **?** button next to them opens a small menu with the program's version and two links: **License (GPL v3)** and **Third-party notices**, which list the open-source software groundwλve is built from. **Quit** stops the program. In the Windows app the Quit button is replaced by the window's close button, and you can drag the window by the top bar.
+Click the clocks to open the Time & Location page. The **?** button next to them opens a small menu with the program's version and these items: **License (GPL v3)** and **Third-party notices**, which list the open-source software groundwλve is built from; **GitHub repository**, a link to the project's home page; and **Check for updates**. Pressing **Check for updates** asks GitHub (one anonymous request, only when you press it) which release is newest and tells you whether you already have it (or are running a newer test build). If a newer one exists, an **Open the release page** link takes you to the download. The program never downloads or installs an update by itself. **Quit** stops the program. In the Windows app the Quit button is replaced by the window's close button, and you can drag the window by the top bar.
 
 ## Library
 
