@@ -95,6 +95,31 @@ func TestCheckRemoteComparesPublicationDates(t *testing.T) {
 	}
 }
 
+func TestAnUpdateClearsTheNewerListNote(t *testing.T) {
+	p := newPublisher(t, built)
+	s := builtStore(t, p)
+	p.set("Sun, 15 Nov 2026 14:08:58 GMT")
+	if st, _ := s.CheckRemote(context.Background()); !st.Newer {
+		t.Fatal("setup: the list should look newer")
+	}
+	if s.Status().Remote == nil {
+		t.Fatal("setup: the check should be remembered")
+	}
+	if err := s.StartUpdate(); err != nil {
+		t.Fatal(err)
+	}
+	if up := waitDone(t, s); up.Error != "" {
+		t.Fatalf("%+v", up)
+	}
+	if r := s.Status().Remote; r != nil {
+		t.Fatalf("after the update the page would still say a newer list exists: %+v", r)
+	}
+	// and the next check compares with the list the database was just built from
+	if st, _ := s.CheckRemote(context.Background()); st.Newer {
+		t.Errorf("the database was just rebuilt from the publisher's current list, yet it looks out of date: %+v", st)
+	}
+}
+
 func TestCheckRemoteNeverDownloadsTheList(t *testing.T) {
 	p := newPublisher(t, built)
 	s := builtStore(t, p)

@@ -247,6 +247,7 @@ func (s *Store) runUpdate(ctx context.Context, done chan struct{}) {
 	switch {
 	case err == nil:
 		s.upd.Phase, s.upd.Fraction, s.upd.Error, s.upd.Cancelled = "Done", 1, "", false
+		s.remote = nil // an earlier "a newer list exists" no longer applies: the database was just rebuilt from it
 	case errors.Is(err, context.Canceled):
 		s.upd.Phase, s.upd.Cancelled, s.upd.Error = "Cancelled", true, ""
 	default:
