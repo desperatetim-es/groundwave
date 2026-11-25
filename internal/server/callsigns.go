@@ -19,8 +19,8 @@ type Callsigns interface {
 	Search(q string, limit int) ([]callsign.Record, error)
 	Lookup(call string) ([]callsign.Record, error)
 	Status() callsign.Status
-	StartUpdate() error
-	CancelUpdate()
+	StartUpdate(source string) error
+	CancelUpdate(source string)
 }
 
 // noCallsigns is used when the program is built without a database (tests).
@@ -29,8 +29,10 @@ type noCallsigns struct{}
 func (noCallsigns) Search(string, int) ([]callsign.Record, error) { return nil, callsign.ErrNoDatabase }
 func (noCallsigns) Lookup(string) ([]callsign.Record, error)      { return nil, callsign.ErrNoDatabase }
 func (noCallsigns) Status() callsign.Status                       { return callsign.Status{} }
-func (noCallsigns) StartUpdate() error                            { return errors.New("the callsign database is not available") }
-func (noCallsigns) CancelUpdate()                                 {}
+func (noCallsigns) StartUpdate(string) error {
+	return errors.New("the callsign database is not available")
+}
+func (noCallsigns) CancelUpdate(string) {}
 
 // callsignResult is a record plus its distance and bearing from the point the
 // caller gave, computed on the fly (never stored: the point changes as the
@@ -66,11 +68,20 @@ func fromPoint(q url.Values) (lat, lon float64, ok bool, err error) {
 	return lat, lon, true, nil
 }
 
+// standing says whether a record is currently licensed. The FCC's records carry an expiry date and
+// a status; ISED publishes neither, so a Canadian record is simply "listed" (and is never dimmed).
+func standing(r callsign.Record, now time.Time) (code, label string) {
+	if r.Country != "" && r.Country != callsign.IDUS {
+		return "listed", "Listed"
+	}
+	return callsign.Standing(r.Status, r.Expires, now)
+}
+
 func annotate(rs []callsign.Record, hasFrom bool, lat, lon float64, now time.Time) []callsignResult {
 	out := make([]callsignResult, len(rs))
 	for i, r := range rs {
 		out[i].Record = r
-		out[i].Standing, out[i].StandingName = callsign.Standing(r.Status, r.Expires, now)
+		out[i].Standing, out[i].StandingName = standing(r, now)
 		if hasFrom && r.Lat != nil && r.Lon != nil {
 			km := geo.DistanceKM(lat, lon, *r.Lat, *r.Lon)
 			mi := geo.KMToMiles(km)
@@ -123,8 +134,21 @@ func (s *srv) callsignSearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"results": annotate(rs, has, lat, lon, time.Now())})
 }
 
+// sourceID reads ?source=us|ca; without it the update and cancel buttons mean the US database,
+// as they did before there were other countries.
+func sourceID(r *http.Request) string {
+	if id := r.URL.Query().Get("source"); id != "" {
+		return id
+	}
+	return callsign.IDUS
+}
+
 func (s *srv) callsignUpdate(w http.ResponseWriter, r *http.Request) {
-	if err := s.Callsigns.StartUpdate(); err != nil {
+	if err := s.Callsigns.StartUpdate(sourceID(r)); err != nil {
+		if errors.Is(err, callsign.ErrUnknownSource) {
+			writeErr(w, http.StatusBadRequest, err)
+			return
+		}
 		if errors.Is(err, callsign.ErrBusy) {
 			writeJSON(w, http.StatusConflict, map[string]any{"error": err.Error(), "status": s.Callsigns.Status()})
 			return
@@ -136,6 +160,6 @@ func (s *srv) callsignUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *srv) callsignCancel(w http.ResponseWriter, r *http.Request) {
-	s.Callsigns.CancelUpdate()
+	s.Callsigns.CancelUpdate(sourceID(r))
 	writeJSON(w, http.StatusOK, s.Callsigns.Status())
 }

@@ -29,7 +29,7 @@ func TestStateCode(t *testing.T) {
 	// every name points at a real code, and all 50 states plus DC are covered
 	seen := map[string]bool{}
 	for name, code := range stateNames {
-		if !stateCodes[code] {
+		if !stateCodes[code] && !provinceCodes[code] {
 			t.Errorf("%q maps to %q, which is not a known code", name, code)
 		}
 		seen[code] = true

@@ -18,7 +18,7 @@ const (
 const selectColumns = `l.call, l.name, l.club, l.class, l.status, l.granted, l.expires, l.prev_call,
 	l.trustee_call, l.trustee_name, l.city, l.state, l.zip, l.lat, l.lon, l.grid`
 
-func scanRecord(rows *sql.Rows) (Record, error) {
+func scanRecord(rows *sql.Rows, country string) (Record, error) {
 	var r Record
 	var club int
 	var lat, lon sql.NullFloat64
@@ -27,8 +27,9 @@ func scanRecord(rows *sql.Rows) (Record, error) {
 		return Record{}, err
 	}
 	r.Club = club != 0
-	r.ClassName = ClassName(r.Class)
-	r.StatusName = StatusName(r.Status)
+	r.Country = country
+	r.ClassName = classNameFor(country, r.Class)
+	r.StatusName = statusNameFor(country, r.Status)
 	if lat.Valid && lon.Valid {
 		la, lo := lat.Float64, lon.Float64
 		r.Lat, r.Lon = &la, &lo
@@ -36,12 +37,16 @@ func scanRecord(rows *sql.Rows) (Record, error) {
 	return r, nil
 }
 
-// US call signs start with A, K, N or W; a partial one is that, an optional
-// second letter, the digit and up to three more letters (W, KD9, N0CAL, W1AW).
+// A call sign starts with a US prefix (A, K, N or W and an optional second letter) or a
+// Canadian one (VA to VG, VO, VY, CF to CK, CY, CZ, XJ to XO); a partial one is that, the
+// digit and up to three more letters (W, KD9, N0CAL, W1AW, VE3, VA3XYZ).
 // zipRE matches a ZIP code: 12345, 12345-6789 or 123456789.
 var zipRE = regexp.MustCompile(`^[0-9]{5}(-?[0-9]{4})?$`)
 
-var callRE = regexp.MustCompile(`^[AKNWaknw][A-Za-z]?[0-9][A-Za-z]{0,3}$`)
+var callRE = regexp.MustCompile(`^(?:[AKNWaknw][A-Za-z]?|[Vv][A-Ga-gOoYy]|[Cc][F-Kf-kYyZz]|[Xx][J-Oj-o])[0-9][A-Za-z]{0,3}$`)
+
+// postalRE matches a Canadian postal code's forward sortation area (K1A) or a full code (K1A 0B1 or K1A0B1).
+var postalRE = regexp.MustCompile(`^[A-Za-z][0-9][A-Za-z](?: ?[0-9][A-Za-z][0-9])?$`)
 
 // NormalizeCall upper-cases a call sign and strips portable markers and
 // reciprocal prefixes: W1AW/4 and W1AW/P give W1AW; VE3/W1AW gives W1AW.
@@ -102,8 +107,12 @@ func parseQuery(q string) (query, error) {
 		switch {
 		case strings.HasPrefix(low, "call:"):
 			p.call = NormalizeCall(tok[5:])
-		case strings.HasPrefix(low, "zip:"):
-			p.zip = cleanZIP(tok[4:])
+		case strings.HasPrefix(low, "zip:"), strings.HasPrefix(low, "postal:"):
+			// a US ZIP code, or a Canadian postal code (only its first three characters are kept)
+			val := tok[strings.Index(tok, ":")+1:]
+			if p.zip = cleanZIP(val); p.zip == "" {
+				p.zip = cleanFSA(val)
+			}
 		case strings.HasPrefix(low, "st:"), strings.HasPrefix(low, "state:"):
 			code, ok := StateCode(tok[strings.Index(tok, ":")+1:])
 			if !ok {
@@ -248,7 +257,7 @@ func (d *DB) run(p query, limit int) ([]Record, error) {
 	defer rows.Close()
 	out := []Record{}
 	for rows.Next() {
-		r, err := scanRecord(rows)
+		r, err := scanRecord(rows, d.country)
 		if err != nil {
 			return nil, err
 		}
@@ -271,7 +280,7 @@ func (d *DB) Lookup(call string) ([]Record, error) {
 	defer rows.Close()
 	out := []Record{}
 	for rows.Next() {
-		r, err := scanRecord(rows)
+		r, err := scanRecord(rows, d.country)
 		if err != nil {
 			return nil, err
 		}

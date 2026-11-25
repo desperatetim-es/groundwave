@@ -67,11 +67,31 @@ const dataSection = `Data files embedded in the program
     file dated 2021-01-22). U.S. government data in the public domain.
     Source: https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/2020_Gaz_zcta_national.zip
 
+  Canadian postal-code area centre points (internal/callsign/fsa.csv)
+    From GeoNames postal code data for Canada (the first three characters of
+    each postal code), https://www.geonames.org/, file CA.txt downloaded
+    2026-11-24 from https://download.geonames.org/export/zip/CA.zip.
+    Licensed under the Creative Commons Attribution 4.0 International
+    license, https://creativecommons.org/licenses/by/4.0/. The data is
+    provided "as is", without warranty or any representation of accuracy,
+    timeliness or completeness. Coordinates are GeoNames estimates. The
+    only change made here is dropping the columns the program does not use.
+
   The user guide (internal/guide) is groundwλve's own writing, covered by
   the groundwλve license.
 
-  The FCC amateur license database is not included in the program. It is
-  downloaded by the user, from the FCC, when they press Update Database.
+  The amateur license lists themselves are not included in the program.
+  Each is downloaded by the user, from the authority that publishes it,
+  when they press that country's Update Database button:
+    - United States: the FCC's public amateur license file (l_amat.zip).
+    - Canada: Innovation, Science and Economic Development Canada (ISED),
+      Canadian amateur radio call sign list (amateur_delim.zip),
+      https://ised-isde.canada.ca/site/amateur-radio-operator-certificate-services/en/node/5.
+      ISED's terms allow reproduction for non-commercial purposes without
+      charge or further permission, with due diligence on accuracy and a
+      credit giving the title, author and source; commercial redistribution
+      needs ISED's written permission
+      (https://ised-isde.canada.ca/site/ised/en/terms-and-conditions/terms-and-conditions).
 `
 
 func main() {

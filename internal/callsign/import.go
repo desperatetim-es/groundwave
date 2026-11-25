@@ -271,6 +271,7 @@ func Import(ctx context.Context, o ImportOptions) (ImportStats, error) {
 
 	meta := map[string]string{
 		"schema_version":  strconv.Itoa(SchemaVersion),
+		"country":         IDUS,
 		"built_at":        time.Now().UTC().Format(time.RFC3339),
 		"source_modified": o.SourceModified,
 		"records":         strconv.Itoa(st.Records),

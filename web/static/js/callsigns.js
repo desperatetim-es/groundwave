@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 KD9PSM
 
-// Callsigns page: search the offline FCC database, with distance and bearing
-// from your grid square, and download or update the database.
+// Callsigns page: search the offline databases (one per country, each downloaded from the country's
+// licensing authority on request), with distance and bearing from your grid square.
 import { h, api } from "./dom.js";
 import { current as gpsCurrent } from "./gpsstate.js";
 import { GRID_RE, getHomeGrid, setHomeGrid } from "./homegrid.js";
@@ -11,6 +11,7 @@ import { GRID_RE, getHomeGrid, setHomeGrid } from "./homegrid.js";
 const store = { get: getHomeGrid, set: setHomeGrid };
 
 const nf = new Intl.NumberFormat("en-US");
+const COUNTRIES = { us: "United States", ca: "Canada" };
 
 function distanceText(r) {
   if (r.distance_mi == null) return "-";
@@ -31,10 +32,11 @@ export function mount(root, args = []) {
   let timer = null;
   let seq = 0;
   let statusTimer = null;
-  let lastUpdateRunning = false;
+  const wasRunning = {}; // source id -> its update was running at the last status
+  let installed = 0;     // how many country databases exist (results are labelled by country when more than one)
 
   // ---- search ----
-  const q = h("input", { type: "search", id: "cs-q", placeholder: "Call sign, name, City, ST, or ZIP", "aria-label": "Search callsigns", autocomplete: "off" });
+  const q = h("input", { type: "search", id: "cs-q", placeholder: "Call sign, name, City, ST, or ZIP / postal code", "aria-label": "Search callsigns", autocomplete: "off" });
   const grid = h("input", { type: "text", id: "cs-grid", maxlength: "8", placeholder: "e.g. EN52vf", "aria-label": "Your grid square", value: store.get() });
   const gridHint = h("span", { class: "hint" });
   const useGps = h("button", { type: "button", class: "quiet", onclick: () => fillFromGps(true) }, "Use GPS");
@@ -83,23 +85,23 @@ export function mount(root, args = []) {
     note.textContent = results.length === 0 ? `No licenses match "${text}".` :
       `${results.length}${results.length === 50 ? " or more" : ""} result${results.length === 1 ? "" : "s"}.` + (validGrid() ? "" : " Enter your grid square to see distances.");
     for (const r of results) {
-      const expired = r.standing !== "active"; // worked out by the server from the expiry date
+      const expired = r.standing !== "active" && r.standing !== "listed"; // worked out by the server (Canada has no expiry: its records are "listed")
       const nameCell = h("td", {}, r.name,
         r.club && h("span", { class: "tag" }, "club"),
         r.club && r.trustee_name && h("div", { class: "unit" }, `trustee ${r.trustee_name}${r.trustee_call ? " (" + r.trustee_call + ")" : ""}`),
         r.prev_call && h("div", { class: "unit" }, "previously " + r.prev_call));
       rows.append(h("tr", { class: expired ? "dim" : "" },
-        h("td", {}, h("strong", {}, r.call)),
+        h("td", {}, h("strong", {}, r.call), installed > 1 && r.country && h("span", { class: "tag", title: COUNTRIES[r.country] || r.country }, r.country.toUpperCase())),
         nameCell,
         h("td", {}, r.class_name || (r.club ? "Club" : "-")),
         h("td", {}, r.standing_name || r.status_name, expired && r.expires && h("div", { class: "unit" }, "term ended " + r.expires)),
         h("td", {}, [r.city, [r.state, r.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "-"),
-        h("td", { title: "Approximate: the centre of the licensee's ZIP code" }, r.grid || "-"),
+        h("td", { title: "Approximate: the centre of the licensee's ZIP or postal-code area" }, r.grid || "-"),
         h("td", {}, distanceText(r))));
     }
   }
 
-  const EXAMPLES = "Try a call sign (kd9, w1aw), a name (smith), a city and state (cary, il or Cary, Illinois), a ZIP code (60013), or filters (call:W9, st:IL, name:smith).";
+  const EXAMPLES = "Try a call sign (kd9, w1aw, ve3), a name (smith), a city and state or province (cary, il or Ottawa, ON), a ZIP code (60013), or filters (call:W9, st:IL, zip:60013, postal:K1A, name:smith).";
   q.addEventListener("input", () => schedule());
   grid.addEventListener("input", () => {
     gridHint.textContent = "";
@@ -107,43 +109,65 @@ export function mount(root, args = []) {
     schedule(150);
   });
 
-  // ---- the database ----
-  const dbLine = h("p", {});
-  const bar = h("progress", { max: "100", value: "0", hidden: true, "aria-label": "Update progress" });
-  const barText = h("p", { class: "hint", "aria-live": "polite" });
-  const updErr = h("p", { class: "hint err", hidden: true });
-  const updateBtn = h("button", { type: "button", onclick: startUpdate }, "Update Database");
-  const cancelBtn = h("button", { type: "button", class: "quiet", hidden: true, onclick: cancelUpdate }, "Cancel");
+  // ---- the databases: one block per country ----
+  const dbBox = h("div", {});
+  const blocks = {}; // source id -> its elements
 
-  async function startUpdate() {
-    if (!confirm("Download the FCC amateur license file (about 200 MB) and build the callsign database?\n\nThis takes a few minutes and needs roughly 500 MB of free disk space while it runs. Searching afterwards works without the internet.")) return;
-    updErr.hidden = true;
-    try { renderStatus(await api("/api/callsigns/update", { method: "POST" })); } catch (e) { updErr.hidden = false; updErr.textContent = e.message; }
+  function makeBlock(src) {
+    const b = {
+      line: h("p", {}),
+      bar: h("progress", { max: "100", value: "0", hidden: true, "aria-label": `${src.country} update progress` }),
+      text: h("p", { class: "hint", "aria-live": "polite" }),
+      err: h("p", { class: "hint err", hidden: true }),
+      credit: h("p", { class: "hint" }, src.credit),
+    };
+    b.update = h("button", { type: "button", onclick: () => startUpdate(src) }, "Update Database");
+    b.cancel = h("button", { type: "button", class: "quiet", hidden: true, onclick: () => cancelUpdate(src) }, "Cancel");
+    b.root = h("div", { class: "dbblock" }, h("h3", {}, `${src.country} (${src.org})`), b.line, h("div", { class: "row wrap" }, b.update, b.cancel), b.bar, b.text, b.err, b.credit);
+    return b;
   }
-  async function cancelUpdate() {
-    try { renderStatus(await api("/api/callsigns/cancel", { method: "POST" })); } catch (e) { updErr.hidden = false; updErr.textContent = e.message; }
+
+  async function startUpdate(src) {
+    const b = blocks[src.id];
+    if (!confirm(`Download the ${src.org} amateur license list for ${src.country} (${src.download}) and build the database?\n\nThis needs ${src.disk || "some"} of free disk space while it runs. Searching afterwards works without the internet.`)) return;
+    b.err.hidden = true;
+    try { renderStatus(await api("/api/callsigns/update?source=" + encodeURIComponent(src.id), { method: "POST" })); } catch (e) { b.err.hidden = false; b.err.textContent = e.message; }
+  }
+  async function cancelUpdate(src) {
+    const b = blocks[src.id];
+    try { renderStatus(await api("/api/callsigns/cancel?source=" + encodeURIComponent(src.id), { method: "POST" })); } catch (e) { b.err.hidden = false; b.err.textContent = e.message; }
+  }
+
+  function renderSource(src) {
+    if (!blocks[src.id]) { blocks[src.id] = makeBlock(src); dbBox.append(blocks[src.id].root); }
+    const b = blocks[src.id];
+    const u = src.update || {};
+    b.update.disabled = !!u.running;
+    b.update.textContent = src.available ? "Update Database" : "Download Database";
+    b.cancel.hidden = !u.running;
+    b.bar.hidden = !u.running;
+    if (u.running) {
+      b.bar.value = Math.round((u.fraction || 0) * 100);
+      b.text.textContent = `${u.phase || "Working"}${u.bytes_total ? ` (${mb(u.bytes_done)} of ${mb(u.bytes_total)} MB)` : ""}: ${Math.round((u.fraction || 0) * 100)}%`;
+    } else if (u.cancelled) b.text.textContent = "The update was cancelled. Your existing database is unchanged.";
+    else if (u.phase === "Done" && wasRunning[src.id]) b.text.textContent = "The database was updated.";
+    else if (!u.error) b.text.textContent = "";
+    b.err.hidden = !u.error;
+    b.err.textContent = u.error ? u.error + " Your existing database, if any, is unchanged." : "";
+    if (src.available) {
+      b.line.textContent = `${nf.format(src.records)} licenses, ${ageText(src)}` + (src.source_modified ? `, from ${src.org} data published ${src.source_modified.replace(/ \d\d:\d\d:\d\d GMT/, "")}.` : ".") +
+        (src.id === "us" && src.age_days != null && src.age_days > 14 ? " The FCC updates its file weekly, so this one is getting old." : "");
+    } else b.line.textContent = `No ${src.country} database yet. It is downloaded from ${src.org} (${src.download}) when you press the button, then searched here without the internet.`;
+    const finished = wasRunning[src.id] && !u.running && src.available;
+    wasRunning[src.id] = !!u.running;
+    return finished;
   }
 
   function renderStatus(s) {
-    const u = s.update || {};
-    updateBtn.disabled = !!u.running;
-    updateBtn.textContent = s.available ? "Update Database" : "Download Database";
-    cancelBtn.hidden = !u.running;
-    bar.hidden = !u.running;
-    if (u.running) {
-      bar.value = Math.round((u.fraction || 0) * 100);
-      barText.textContent = `${u.phase || "Working"}${u.bytes_total ? ` (${mb(u.bytes_done)} of ${mb(u.bytes_total)} MB)` : ""}: ${Math.round((u.fraction || 0) * 100)}%`;
-    } else if (u.cancelled) barText.textContent = "The update was cancelled. Your existing database is unchanged.";
-    else if (u.phase === "Done" && lastUpdateRunning) barText.textContent = "The database was updated.";
-    else if (!u.error) barText.textContent = "";
-    updErr.hidden = !u.error;
-    updErr.textContent = u.error ? u.error + " Your existing database, if any, is unchanged." : "";
-    if (s.available) {
-      dbLine.textContent = `${nf.format(s.records)} licenses, ${ageText(s)}` + (s.source_modified ? `, from FCC data published ${s.source_modified.replace(/ \d\d:\d\d:\d\d GMT/, "")}.` : ".") +
-        (s.age_days != null && s.age_days > 14 ? " The FCC updates its file weekly, so this one is getting old." : "");
-    } else dbLine.textContent = "No database yet. It is downloaded from the FCC when you press the button, then searched here without the internet.";
-    if (lastUpdateRunning && !u.running && s.available) schedule(0); // refresh results from the new data
-    lastUpdateRunning = !!u.running;
+    let refresh = false;
+    installed = (s.sources || []).filter((x) => x.available).length;
+    for (const src of s.sources || []) if (renderSource(src)) refresh = true;
+    if (refresh) schedule(0); // refresh results from the new data
   }
 
   async function loadStatus() {
@@ -154,18 +178,16 @@ export function mount(root, args = []) {
     h("section", { class: "panel" },
       h("h1", { class: "sr-only" }, "Callsigns"),
       h("h2", {}, "Callsigns"),
-      h("p", { class: "hint" }, "Search every US amateur license with no internet connection."),
+      h("p", { class: "hint" }, "Search amateur licenses with no internet connection. Download a country's list below to search it."),
       h("div", { class: "row wrap" }, q),
       h("div", { class: "row wrap" },
         h("label", { class: "check", for: "cs-grid" }, "Your grid square ", grid), useGps, gridHint),
       note, table,
-      h("p", { class: "hint" }, "Locations are approximate: each is the centre of the licensee's ZIP code, so distances mean \"about how far\", not exact. Grid squares and distances can be corrected for mobile, POTA and SOTA stations when you log a contact.")),
+      h("p", { class: "hint" }, "Locations are approximate: each is the centre of the licensee's ZIP code or postal-code area, so distances mean \"about how far\", not exact. Grid squares and distances can be corrected for mobile, POTA and SOTA stations when you log a contact.")),
     h("section", { class: "panel" },
-      h("h2", {}, "Database"),
-      dbLine,
-      h("div", { class: "row wrap" }, updateBtn, cancelBtn),
-      bar, barText, updErr,
-      h("p", { class: "hint" }, "Source: the FCC's public amateur license file, which the FCC refreshes weekly. Only call sign, name, class, status, dates and city, state and ZIP are kept. Street addresses, phone numbers and email addresses are never saved. The download happens only when you press the button; searching never uses the internet.")),
+      h("h2", {}, "Databases"),
+      h("p", { class: "hint" }, "Each country's list is downloaded from its licensing authority only when you press the button; searching never uses the internet. Street addresses, phone numbers and email addresses are never saved."),
+      dbBox),
   );
 
   note.textContent = EXAMPLES;

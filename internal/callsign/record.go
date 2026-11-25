@@ -15,6 +15,7 @@ import (
 
 // Record is one license.
 type Record struct {
+	Country     string   `json:"country,omitempty"` // the source's ID: "us" or "ca"
 	Call        string   `json:"call"`
 	Name        string   `json:"name"`
 	Club        bool     `json:"club,omitempty"` // a club or other organisation, not a person
@@ -42,6 +43,36 @@ var classNames = map[string]string{
 
 // ClassName spells out an FCC operator class code.
 func ClassName(code string) string { return classNames[strings.ToUpper(strings.TrimSpace(code))] }
+
+// caQualNames spell out ISED's qualification flags (stored as the letters A to E).
+var caQualNames = map[rune]string{
+	'A': "Basic", 'B': "5 WPM", 'C': "12 WPM", 'D': "Advanced", 'E': "Basic with Honours",
+}
+
+// classNameFor spells out a record's class for the country it comes from. For Canada the
+// stored value is the set of qualification letters the holder has (ADE: Basic, Advanced
+// and Basic with Honours).
+func classNameFor(country, code string) string {
+	if country != IDCA {
+		return ClassName(code)
+	}
+	var parts []string
+	for _, r := range code {
+		if n, ok := caQualNames[r]; ok {
+			parts = append(parts, n)
+		}
+	}
+	return strings.Join(parts, ", ")
+}
+
+// statusNameFor labels a record's status. ISED publishes no status or expiry, so a
+// Canadian record is simply "Listed".
+func statusNameFor(country, code string) string {
+	if country == IDCA {
+		return "Listed"
+	}
+	return StatusName(code)
+}
 
 var statusNames = map[string]string{
 	"A": "Active", "E": "Expired", "C": "Cancelled", "T": "Terminated", "X": "Termination pending",

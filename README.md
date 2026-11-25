@@ -10,7 +10,7 @@ It is one self-contained program for Windows and Linux. No account, no telemetry
 
 - **Document library.** Your own manuals and notes in an ordinary folder: add files or paste a link, search by title and tag, open them in your browser's PDF viewer.
 - **Antenna tools.** Dipole, quarter-wave vertical and J-pole lengths, wavelength, SWR, return loss and feedline loss, and power/EIRP/ERP.
-- **Offline callsign database.** Search every US amateur license by call sign, name, city, state or ZIP, with distance and bearing from your grid square. Built from the FCC's public file; no street addresses or phone numbers are kept.
+- **Offline callsign databases.** Search amateur licenses of the United States and Canada by call sign, name, city, state or province, ZIP or postal code, with distance and bearing from your grid square. Each list is downloaded by you, from the FCC or ISED Canada, when you press a button; no street addresses or phone numbers are kept.
 - **Logbook.** Log contacts locally, search them, and import or export ADIF 3.1.4 files.
 - **Time & Location.** GPS time and position from a USB receiver, compared with your system clock and internet time, so you know whether your clock is good enough for FT8 and FT4.
 - **Built-in user guide**, available offline.

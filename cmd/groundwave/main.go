@@ -94,7 +94,7 @@ func main() {
 
 	// The offline callsign database lives in the data folder. It is only downloaded when the user
 	// presses Update Database, and searching it never touches the network.
-	callsigns, err := callsign.NewStore(callsign.StoreOptions{Dir: filepath.Join(dir, "callsigns")})
+	callsigns, err := callsign.NewDirectory(callsign.DirOptions{Dir: filepath.Join(dir, "callsigns")})
 	if err != nil {
 		fatal("cannot open the callsign database folder: ", err)
 	}
