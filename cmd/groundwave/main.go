@@ -24,10 +24,12 @@ import (
 	"github.com/kd9psm/groundwave/internal/callsign"
 	"github.com/kd9psm/groundwave/internal/gps"
 	"github.com/kd9psm/groundwave/internal/guide"
+	"github.com/kd9psm/groundwave/internal/launch"
 	"github.com/kd9psm/groundwave/internal/library"
 	"github.com/kd9psm/groundwave/internal/logbook"
 	"github.com/kd9psm/groundwave/internal/ntp"
 	"github.com/kd9psm/groundwave/internal/server"
+	"github.com/kd9psm/groundwave/internal/settings"
 	"github.com/kd9psm/groundwave/internal/updatecheck"
 	"github.com/kd9psm/groundwave/internal/window"
 )
@@ -113,6 +115,10 @@ func main() {
 	timeCheck.Resume()
 	defer timeCheck.Close()
 
+	// The user's preferences. Everything that contacts the internet by itself is off until switched on.
+	prefs := settings.Open(filepath.Join(dir, "settings.json"))
+	updates := updatecheck.New(updatecheck.Options{Version: version})
+
 	quit := make(chan struct{})
 	var once sync.Once
 	stop := func() { once.Do(func() { close(quit) }) }
@@ -122,7 +128,8 @@ func main() {
 		Time:      timeCheck,
 		Callsigns: callsigns,
 		Logbook:   qsoLog,
-		Updates:   updatecheck.New(updatecheck.Options{Version: version}),
+		Settings:  prefs,
+		Updates:   updates,
 		OpenURL:   browser.Open,
 		Fetcher:   &library.Fetcher{},
 		Addr:      ln.Addr().String(),
@@ -137,6 +144,21 @@ func main() {
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			fatal("the server stopped: ", err)
 		}
+	}()
+
+	// What the user asked for at launch (check for a newer release; check or update the callsign databases
+	// already downloaded). With the default settings this does nothing. It waits a few seconds so that
+	// starting up is never slowed down by it.
+	launchCtx, cancelLaunch := context.WithCancel(context.Background())
+	defer cancelLaunch()
+	go func() {
+		select {
+		case <-time.After(3 * time.Second):
+		case <-quit:
+			return
+		}
+		go func() { <-quit; cancelLaunch() }()
+		launch.Run(launchCtx, launch.Deps{Settings: prefs.Get, Updates: updates, Callsigns: callsigns})
 	}()
 
 	sig := make(chan os.Signal, 1)

@@ -20,12 +20,14 @@ type fakeUpdates struct {
 	res   updatecheck.Result
 	err   error
 	calls int32
+	last  bool // Last reports a result
 }
 
 func (f *fakeUpdates) Check(context.Context) (updatecheck.Result, error) {
 	atomic.AddInt32(&f.calls, 1)
 	return f.res, f.err
 }
+func (f *fakeUpdates) Last() (updatecheck.Result, bool) { return f.res, f.last }
 
 func serverWith(t *testing.T, u UpdateChecker, open func(string) error) http.Handler {
 	t.Helper()
@@ -62,8 +64,9 @@ func TestUpdateCheckReportsTheResult(t *testing.T) {
 func TestUpdateCheckIsPostOnlyAndGuarded(t *testing.T) {
 	f := &fakeUpdates{}
 	h := serverWith(t, f, nil)
-	if rec := do(h, "GET", "/api/update-check", addr, origin, nil, ""); rec.Code < 400 {
-		t.Errorf("GET: got %d, want an error (the check is POST only)", rec.Code)
+	// a GET only reads the last result and never contacts GitHub (the request itself is a POST)
+	if rec := do(h, "GET", "/api/update-check", addr, origin, nil, ""); rec.Code != http.StatusOK || f.calls != 0 {
+		t.Errorf("GET: got %d after %d checks, want a plain read of the last result", rec.Code, f.calls)
 	}
 	for _, o := range []string{"", "https://evil.example.com", "http://127.0.0.1:9999", "null"} {
 		if rec := do(h, "POST", "/api/update-check", addr, o, nil, ""); rec.Code != http.StatusForbidden {

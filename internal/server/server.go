@@ -18,6 +18,7 @@ import (
 
 	"github.com/kd9psm/groundwave/internal/library"
 	"github.com/kd9psm/groundwave/internal/logbook"
+	"github.com/kd9psm/groundwave/internal/settings"
 	"github.com/kd9psm/groundwave/web"
 )
 
@@ -28,6 +29,7 @@ type Config struct {
 	Time      Time               // internet-time checker; nil = none
 	Callsigns Callsigns          // offline callsign database; nil = none
 	Logbook   *logbook.Store     // contact log; nil = none
+	Settings  *settings.Store    // the user's preferences; nil = defaults held in memory
 	Updates   UpdateChecker      // "Check for updates" in the Help menu; nil = unavailable
 	OpenURL   func(string) error // opens a fixed link in the system browser (Help menu); nil = unavailable
 	Fetcher   *library.Fetcher
@@ -60,6 +62,9 @@ func New(c Config) (http.Handler, error) {
 	if c.Updates == nil {
 		c.Updates = noUpdates{}
 	}
+	if c.Settings == nil {
+		c.Settings = settings.Open("")
+	}
 	_, port, err := net.SplitHostPort(c.Addr)
 	if err != nil {
 		return nil, err
@@ -79,6 +84,9 @@ func New(c Config) (http.Handler, error) {
 	mux.HandleFunc("GET /api/ping", s.ping)
 	mux.HandleFunc("GET /api/legal/{name}", s.legal)
 	mux.HandleFunc("POST /api/update-check", s.updateCheck)
+	mux.HandleFunc("GET /api/update-check", s.updateLast)
+	mux.HandleFunc("GET /api/settings", s.settingsGet)
+	mux.HandleFunc("PUT /api/settings", s.settingsPut)
 	mux.HandleFunc("POST /api/open/{name}", s.openExternal)
 	mux.HandleFunc("GET /api/docs", s.list)
 	mux.HandleFunc("POST /api/docs", s.upload)

@@ -49,6 +49,9 @@ type Status struct {
 	SourceModified string      `json:"source_modified,omitempty"` // when the FCC published the file the database was built from
 	Update         UpdateState `json:"update"`
 
+	// Remote is what the last check of the publisher found (see CheckRemote); nil if none was made.
+	Remote *RemoteState `json:"remote,omitempty"`
+
 	// Sources is set only by a Directory: the state of each country's database.
 	Sources []SourceStatus `json:"sources,omitempty"`
 }
@@ -71,6 +74,7 @@ type Store struct {
 
 	mu     sync.RWMutex
 	db     *DB
+	remote *RemoteState
 	upd    UpdateState
 	cancel context.CancelFunc
 	done   chan struct{}
@@ -125,6 +129,10 @@ func (s *Store) Status() Status {
 		return st
 	}
 	st.Available, st.Records, st.SourceModified = true, info.Records, info.SourceModified
+	if s.remote != nil {
+		r := *s.remote
+		st.Remote = &r
+	}
 	if !info.BuiltAt.IsZero() {
 		b := info.BuiltAt
 		age := int(s.o.Now().Sub(b).Hours() / 24)
@@ -257,19 +265,26 @@ func friendlyUpdateError(err error, src *Source) string {
 	return msg
 }
 
-// download fetches the source's file into dest and returns when it was published.
-func (s *Store) download(ctx context.Context, dest string) (modified string, err error) {
-	s.setPhase("Downloading", 0)
+// downloadURL returns the address the list is fetched from, after checking that it is an https
+// address of the authority that issues the list.
+func (s *Store) downloadURL() (*url.URL, error) {
 	u, err := url.Parse(s.o.URL)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	src := s.o.Source
 	if !s.o.AnyHostForTests && (u.Scheme != "https" || !src.Host(u.Hostname())) {
-		return "", fmt.Errorf("the download address is not an %s https address", src.Org)
+		return nil, fmt.Errorf("the download address is not an %s https address", src.Org)
 	}
-	client := &http.Client{
-		Timeout: 0, // large file: the context controls cancellation
+	return u, nil
+}
+
+// httpClient returns a client that follows at most five redirects, all of them to https addresses of
+// the issuing authority.
+func (s *Store) httpClient(timeout time.Duration) *http.Client {
+	src := s.o.Source
+	return &http.Client{
+		Timeout: timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 5 {
 				return errors.New("too many redirects")
@@ -280,6 +295,17 @@ func (s *Store) download(ctx context.Context, dest string) (modified string, err
 			return nil
 		},
 	}
+}
+
+// download fetches the source's file into dest and returns when it was published.
+func (s *Store) download(ctx context.Context, dest string) (modified string, err error) {
+	s.setPhase("Downloading", 0)
+	u, err := s.downloadURL()
+	if err != nil {
+		return "", err
+	}
+	src := s.o.Source
+	client := s.httpClient(0) // large file: the context controls cancellation
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", err

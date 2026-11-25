@@ -89,9 +89,8 @@ export function mount(root) {
   const ntpBody = h("tbody");
   const ntpTable = h("table", { class: "sats", hidden: true },
     h("thead", {}, h("tr", {}, ["Server", "Result", "Offset", "Round trip", "Stratum"].map((t) => h("th", {}, t)))), ntpBody);
-  const ntpToggle = h("input", { type: "checkbox", id: "ntp-on", onchange: async (e) => {
-    try { await net.setEnabled(e.target.checked); ntpMsg.textContent = ""; } catch (err) { ntpMsg.textContent = err.message; e.target.checked = !e.target.checked; }
-  } });
+  // The automatic-check choice lives in Settings (the gear icon); the card only shows it.
+  const ntpAuto = h("p", { class: "hint", id: "ntp-auto" });
   const ntpBtn = h("button", { type: "button", onclick: runCheck }, "Check Now");
 
   async function runCheck() {
@@ -108,7 +107,7 @@ export function mount(root) {
   }
 
   function renderNtp(s) {
-    if (document.activeElement !== ntpToggle) ntpToggle.checked = !!s.enabled;
+    ntpAuto.replaceChildren("Automatic checks every 10 minutes: ", h("strong", {}, s.enabled ? "on" : "off"), ". To change this, open ", h("a", { href: "#/settings" }, "Settings"), " (the gear icon at the top right).");
     ntpBtn.disabled = !!s.checking;
     ntpBody.replaceChildren();
     const results = s.results || [];
@@ -330,10 +329,9 @@ export function mount(root) {
       h("p", { class: "hint" }, "Internet time is the most accurate reference when you are online (typically within a few hundredths of a second). A plain serial GPS receiver does not mark the exact top of each second, so GPS time here is good to roughly a third of a second. That is fine for FT8 and FT4, and it works with no internet. This page only displays times; it never changes your computer's clock.")),
     h("section", { class: "panel" }, h("h2", {}, "Position"), posRows),
     fold("Internet Time (NTP)",
-      h("div", { class: "row wrap" }, ntpBtn,
-        h("label", { class: "check" }, ntpToggle, " Also check automatically every 10 minutes")),
-      ntpSummary, ntpMsg, ntpNote, ntpTable,
-      h("p", { class: "hint" }, "Checking sends a small request to public time servers, which can see this computer's internet address. Nothing is sent unless you press Check Now or turn on automatic checks (off by default). The servers used are time.cloudflare.com, time.nist.gov and pool.ntp.org; they can be changed in time.json in your data folder.")),
+      h("div", { class: "row wrap" }, ntpBtn),
+      ntpAuto, ntpSummary, ntpMsg, ntpNote, ntpTable,
+      h("p", { class: "hint" }, "Checking sends a small request to public time servers, which can see this computer's internet address. Nothing is sent unless you press Check Now or turn on automatic checks in Settings (off by default). The servers used are time.cloudflare.com, time.nist.gov and pool.ntp.org; they can be changed in time.json in your data folder.")),
     fold("GPS Receiver Status", stText, stMsg, stPort, utcLine, warn),
     fold("Satellites", satSummary, satHint, satTable, devInfo),
     fold("Receiver Settings",

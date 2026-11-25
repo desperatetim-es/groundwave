@@ -116,6 +116,7 @@ export function mount(root, args = []) {
   function makeBlock(src) {
     const b = {
       line: h("p", {}),
+      remote: h("p", { class: "hint", hidden: true }),
       bar: h("progress", { max: "100", value: "0", hidden: true, "aria-label": `${src.country} update progress` }),
       text: h("p", { class: "hint", "aria-live": "polite" }),
       err: h("p", { class: "hint err", hidden: true }),
@@ -123,7 +124,7 @@ export function mount(root, args = []) {
     };
     b.update = h("button", { type: "button", onclick: () => startUpdate(src) }, "Update Database");
     b.cancel = h("button", { type: "button", class: "quiet", hidden: true, onclick: () => cancelUpdate(src) }, "Cancel");
-    b.root = h("div", { class: "dbblock" }, h("h3", {}, `${src.country} (${src.org})`), b.line, h("div", { class: "row wrap" }, b.update, b.cancel), b.bar, b.text, b.err, b.credit);
+    b.root = h("div", { class: "dbblock" }, h("h3", {}, `${src.country} (${src.org})`), b.line, b.remote, h("div", { class: "row wrap" }, b.update, b.cancel), b.bar, b.text, b.err, b.credit);
     return b;
   }
 
@@ -158,6 +159,11 @@ export function mount(root, args = []) {
       b.line.textContent = `${nf.format(src.records)} licenses, ${ageText(src)}` + (src.source_modified ? `, from ${src.org} data published ${src.source_modified.replace(/ \d\d:\d\d:\d\d GMT/, "")}.` : ".") +
         (src.id === "us" && src.age_days != null && src.age_days > 14 ? " The FCC updates its file weekly, so this one is getting old." : "");
     } else b.line.textContent = `No ${src.country} database yet. It is downloaded from ${src.org} (${src.download}) when you press the button, then searched here without the internet.`;
+    // what the check at launch found (only if the user asked for one in Settings)
+    const rem = src.available && !u.running ? src.remote : null;
+    b.remote.hidden = !rem || !(rem.newer || rem.error);
+    b.remote.className = "hint" + (rem && rem.newer ? " ok" : "");
+    b.remote.textContent = !rem ? "" : rem.newer ? `A newer list is available (published ${String(rem.modified || "").replace(/ \d\d:\d\d:\d\d GMT/, "")}). Press Update Database to get it.` : rem.error ? `Could not check for a newer list: ${rem.error}` : "";
     const finished = wasRunning[src.id] && !u.running && src.available;
     wasRunning[src.id] = !!u.running;
     return finished;

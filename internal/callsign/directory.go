@@ -4,6 +4,7 @@
 package callsign
 
 import (
+	"context"
 	"errors"
 	"time"
 )
@@ -78,6 +79,18 @@ func (d *Directory) Status() Status {
 		}
 	}
 	return all
+}
+
+// CheckRemote asks the publisher of every downloaded database whether it has a newer list. A source
+// with no database is skipped. The results are also remembered in Status.
+func (d *Directory) CheckRemote(ctx context.Context) map[string]RemoteState {
+	out := map[string]RemoteState{}
+	for _, src := range Sources {
+		if st, err := d.stores[src.ID].CheckRemote(ctx); err == nil {
+			out[src.ID] = st
+		}
+	}
+	return out
 }
 
 // StartUpdate downloads and builds one source's database in the background.

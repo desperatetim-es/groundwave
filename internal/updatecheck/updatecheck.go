@@ -130,6 +130,14 @@ func newer(running, release [3]int, runningPre string) bool {
 	return runningPre != ""
 }
 
+// Last returns the most recent successful check, however old, and whether there has been one.
+// It never contacts GitHub: the page uses it to show what a check at startup found.
+func (c *Checker) Last() (Result, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.last, c.lastOK
+}
+
 // Check asks GitHub for the newest release. Results are reused for 30 seconds,
 // so pressing the button repeatedly sends nothing more to GitHub.
 func (c *Checker) Check(ctx context.Context) (Result, error) {
